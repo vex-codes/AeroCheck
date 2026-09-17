@@ -55,20 +55,21 @@ public final class FlightDashboardViewModel: @unchecked Sendable {
     private var hasInitialized = false
 
     public init() {
-        let loadedProfiles: [DroneProfile]
+        let savedCustom: [DroneProfile]
         if let savedData = UserDefaults.standard.data(forKey: "aerocheck.droneProfiles"),
            let decoded = try? JSONDecoder().decode([DroneProfile].self, from: savedData) {
-            loadedProfiles = decoded
+            savedCustom = decoded.filter { saved in !DroneProfile.standardProfiles.contains(where: { $0.id == saved.id }) }
         } else {
-            loadedProfiles = DroneProfile.standardProfiles
+            savedCustom = []
         }
-        self.droneProfiles = loadedProfiles
+        let merged = DroneProfile.standardProfiles + savedCustom
+        self.droneProfiles = merged
 
         if let savedSelectedId = UserDefaults.standard.string(forKey: "aerocheck.selectedDroneId"),
-           let match = loadedProfiles.first(where: { $0.id == savedSelectedId }) {
+           let match = merged.first(where: { $0.id == savedSelectedId }) {
             self.selectedDrone = match
         } else {
-            self.selectedDrone = loadedProfiles.first ?? DroneProfile.default
+            self.selectedDrone = merged.first ?? DroneProfile.default
         }
 
         let savedPilotName = UserDefaults.standard.string(forKey: "aerocheck.pilotName") ?? ""

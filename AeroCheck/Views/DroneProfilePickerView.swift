@@ -54,46 +54,56 @@ public struct DroneProfilePickerView: View {
                                     ZStack {
                                         Circle()
                                             .fill(profile.id == selectedProfile.id ? DesignTokens.accentMuted : DesignTokens.surfaceTertiary)
-                                            .frame(width: 36, height: 36)
+                                            .frame(width: 38, height: 38)
 
-                                        Image(systemName: "airplane")
-                                            .font(.footnote.weight(.semibold))
+                                        Image(systemName: "drone.fill")
+                                            .font(.subheadline.weight(.bold))
                                             .foregroundStyle(profile.id == selectedProfile.id ? DesignTokens.accent : DesignTokens.textSecondary)
                                     }
 
-                                    VStack(alignment: .leading, spacing: 2) {
+                                    VStack(alignment: .leading, spacing: 3) {
                                         HStack {
                                             Text(profile.name)
-                                                .font(.subheadline.weight(.semibold))
+                                                .font(.subheadline.weight(.bold))
                                                 .foregroundStyle(DesignTokens.textPrimary)
 
                                             Spacer()
 
                                             if profile.id == selectedProfile.id {
                                                 Image(systemName: "checkmark.circle.fill")
-                                                    .font(.subheadline)
+                                                    .font(.subheadline.weight(.bold))
                                                     .foregroundStyle(DesignTokens.statusSafe)
                                             }
                                         }
 
-                                        HStack(spacing: DesignTokens.space8) {
+                                        HStack(spacing: DesignTokens.space6) {
+                                            // Weight badge
                                             Text("\(Int(profile.weightGrams))g")
-                                                .font(.caption.monospaced())
-                                                .foregroundStyle(DesignTokens.textTertiary)
+                                                .font(.caption2.weight(.heavy).monospaced())
+                                                .foregroundStyle(profile.weightGrams < 250 ? DesignTokens.statusSafe : DesignTokens.textSecondary)
+                                                .padding(.horizontal, 6)
+                                                .padding(.vertical, 2)
+                                                .background(
+                                                    Capsule().fill(profile.weightGrams < 250 ? DesignTokens.statusSafeMuted : DesignTokens.surfaceTertiary)
+                                                )
+
+                                            // Wind limit
+                                            HStack(spacing: 2) {
+                                                Image(systemName: "wind")
+                                                    .font(.system(size: 9))
+                                                Text("\(Int(profile.maxWindResistanceMph)) mph max")
+                                                    .font(.caption2.weight(.medium))
+                                            }
+                                            .foregroundStyle(DesignTokens.textSecondary)
 
                                             Text("•")
-                                                .foregroundStyle(DesignTokens.textTertiary)
-
-                                            Text("Max Wind: \(Int(profile.maxWindResistanceMph)) mph")
-                                                .font(.caption)
-                                                .foregroundStyle(DesignTokens.textSecondary)
-
-                                            Text("•")
+                                                .font(.caption2)
                                                 .foregroundStyle(DesignTokens.textTertiary)
 
                                             Text(profile.category)
-                                                .font(.caption)
+                                                .font(.caption2)
                                                 .foregroundStyle(DesignTokens.textTertiary)
+                                                .lineLimit(1)
                                         }
                                     }
                                 }

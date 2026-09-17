@@ -74,10 +74,9 @@ public struct FlightMapView: View {
                                     Circle().stroke(DesignTokens.accent, lineWidth: 2)
                                 )
 
-                            Image(systemName: "airplane")
+                            Image(systemName: "drone.fill")
                                 .font(.caption.weight(.heavy))
                                 .foregroundStyle(DesignTokens.accent)
-                                .rotationEffect(.degrees(-45))
                         }
                     }
                 }

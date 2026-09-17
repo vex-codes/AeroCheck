@@ -73,8 +73,8 @@ struct ContentView: View {
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     HStack(spacing: DesignTokens.space8) {
-                        Image(systemName: "airplane.circle.fill")
-                            .font(.title3)
+                        Image(systemName: "drone.fill")
+                            .font(.title3.weight(.bold))
                             .foregroundStyle(DesignTokens.accent)
 
                         Text("AeroCheck")
@@ -85,10 +85,38 @@ struct ContentView: View {
                 }
 
                 ToolbarItem(placement: .topBarTrailing) {
-                    if viewModel.isLoading {
-                        ProgressView()
-                            .tint(DesignTokens.accent)
+                    Button {
+                        let impact = UIImpactFeedbackGenerator(style: .medium)
+                        impact.impactOccurred()
+                        Task {
+                            await viewModel.refreshData()
+                        }
+                    } label: {
+                        HStack(spacing: 5) {
+                            if viewModel.isLoading {
+                                ProgressView()
+                                    .tint(DesignTokens.accent)
+                                    .controlSize(.small)
+                            } else {
+                                Image(systemName: "arrow.triangle.2.circlepath")
+                                    .font(.caption.weight(.bold))
+                                    .foregroundStyle(DesignTokens.accent)
+                            }
+
+                            Text(viewModel.isLoading ? "Syncing..." : "Sync")
+                                .font(.caption.weight(.bold))
+                                .foregroundStyle(DesignTokens.accent)
+                        }
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 5)
+                        .background(
+                            Capsule()
+                                .fill(DesignTokens.surfaceSecondary)
+                                .overlay(Capsule().stroke(DesignTokens.borderHairline.opacity(0.8), lineWidth: 0.5))
+                        )
                     }
+                    .buttonStyle(.interactivePress)
+                    .disabled(viewModel.isLoading)
                 }
             }
             // Sheets
@@ -210,8 +238,8 @@ struct ContentView: View {
                     }
                 }
             } label: {
-                HStack(spacing: DesignTokens.space4) {
-                    Image(systemName: "airplane")
+                HStack(spacing: DesignTokens.space6) {
+                    Image(systemName: "drone.fill")
                         .font(.caption.weight(.bold))
                         .foregroundStyle(DesignTokens.accent)
 
