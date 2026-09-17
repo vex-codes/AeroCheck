@@ -8,7 +8,7 @@
 import Foundation
 
 /// FAA Flight Category for visual vs instrument flight rules.
-public enum FlightCategory: String, Codable, Sendable {
+public nonisolated enum FlightCategory: String, Codable, Sendable {
     case vfr = "VFR"
     case mvfr = "MVFR"
     case ifr = "IFR"
@@ -98,7 +98,7 @@ nonisolated public struct AviationWeatherReport: Codable, Sendable {
     public let windGust400ftMph: Double?
     public let isHighAltitudeModelLive: Bool // true: Open-Meteo, false: Hellmann derived
 
-    public init(
+    public nonisolated init(
         stationId: String,
         observationTime: Date,
         rawMetar: String,
@@ -141,7 +141,7 @@ nonisolated public struct AviationWeatherReport: Codable, Sendable {
     }
 
     /// Default baseline weather for previews or offline initialization.
-    public static var sampleVFR: AviationWeatherReport {
+    public nonisolated static var sampleVFR: AviationWeatherReport {
         AviationWeatherReport(
             stationId: "KSFO",
             observationTime: Date(),

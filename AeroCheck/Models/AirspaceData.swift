@@ -8,7 +8,7 @@
 import Foundation
 
 /// Airspace classification based on FAA regulations (Part 107.41 / AIM).
-public enum AirspaceClass: String, Codable, Sendable {
+public nonisolated enum AirspaceClass: String, Codable, Sendable {
     case classB = "B"
     case classC = "C"
     case classD = "D"
@@ -54,7 +54,7 @@ public enum AirspaceClass: String, Codable, Sendable {
 }
 
 /// Consolidated airspace authorization status at the current coordinate.
-public struct AirspaceEvaluation: Codable, Sendable {
+public nonisolated struct AirspaceEvaluation: Codable, Sendable {
     public let airspaceClass: AirspaceClass
     public let uasfmCeilingFeet: Int? // 0, 50, 100, 200, 300, 400, or nil if Class G
     public let facilityName: String?
@@ -63,7 +63,7 @@ public struct AirspaceEvaluation: Codable, Sendable {
     public let isZeroCeiling: Bool
     public let regulatoryNote: String
 
-    public init(
+    public nonisolated init(
         airspaceClass: AirspaceClass,
         uasfmCeilingFeet: Int?,
         facilityName: String?,
@@ -82,7 +82,7 @@ public struct AirspaceEvaluation: Codable, Sendable {
     }
 
     /// Default Class G uncontrolled airspace model (standard open airspace).
-    public static var classGDefault: AirspaceEvaluation {
+    public nonisolated static var classGDefault: AirspaceEvaluation {
         AirspaceEvaluation(
             airspaceClass: .classG,
             uasfmCeilingFeet: 400,
