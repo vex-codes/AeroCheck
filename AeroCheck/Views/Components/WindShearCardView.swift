@@ -18,6 +18,7 @@ public struct WindShearCardView: View {
     public let drone: DroneProfile
     public let densityAltitude: Double
     public let thrustLossPercent: Double?
+    public let plannedAltitude: Int
 
     @State private var showRawMetar: Bool = false
 
@@ -25,12 +26,14 @@ public struct WindShearCardView: View {
         weather: AviationWeatherReport?,
         drone: DroneProfile,
         densityAltitude: Double,
-        thrustLossPercent: Double?
+        thrustLossPercent: Double?,
+        plannedAltitude: Int = 400
     ) {
         self.weather = weather
         self.drone = drone
         self.densityAltitude = densityAltitude
         self.thrustLossPercent = thrustLossPercent
+        self.plannedAltitude = plannedAltitude
     }
 
     private var wReport: AviationWeatherReport {
@@ -41,14 +44,27 @@ public struct WindShearCardView: View {
         drone.maxWindResistanceMph
     }
 
-    private var effective400ftWind: Double {
-        max(wReport.wind400ftMph, wReport.windGust400ftMph ?? wReport.wind400ftMph)
+    private var effectivePlannedWind: Double {
+        if plannedAltitude <= 75 {
+            return max(wReport.surfaceWindSpeedMph, wReport.surfaceWindGustMph ?? wReport.surfaceWindSpeedMph)
+        } else if plannedAltitude <= 150 {
+            let gust = wReport.surfaceWindGustMph != nil ? (wReport.wind100ftMph * 1.2) : nil
+            return max(wReport.wind100ftMph, gust ?? wReport.wind100ftMph)
+        } else if plannedAltitude <= 250 {
+            let gust = wReport.surfaceWindGustMph != nil ? (wReport.wind200ftMph * 1.2) : nil
+            return max(wReport.wind200ftMph, gust ?? wReport.wind200ftMph)
+        } else if plannedAltitude <= 350 {
+            let gust = wReport.surfaceWindGustMph != nil ? (wReport.wind300ftMph * 1.2) : nil
+            return max(wReport.wind300ftMph, gust ?? wReport.wind300ftMph)
+        } else {
+            return max(wReport.wind400ftMph, wReport.windGust400ftMph ?? wReport.wind400ftMph)
+        }
     }
 
     private var windStatusColor: Color {
-        if effective400ftWind > maxRatedWind {
+        if effectivePlannedWind > maxRatedWind {
             return DesignTokens.statusAlert
-        } else if effective400ftWind >= maxRatedWind * 0.85 {
+        } else if effectivePlannedWind >= maxRatedWind * 0.85 {
             return DesignTokens.statusCaution
         } else {
             return DesignTokens.statusSafe
@@ -118,7 +134,7 @@ public struct WindShearCardView: View {
                         .font(.subheadline.weight(.heavy))
                         .foregroundStyle(windStatusColor)
 
-                    let delta = effective400ftWind - wReport.surfaceWindSpeedMph
+                    let delta = effectivePlannedWind - wReport.surfaceWindSpeedMph
                     Text(String(format: "+%.1f", max(0, delta)))
                         .font(.caption2.weight(.heavy).monospaced())
                         .foregroundStyle(windStatusColor)
@@ -130,15 +146,15 @@ public struct WindShearCardView: View {
                 }
                 .padding(.top, 6)
 
-                // 400 FT AGL Ceiling Column
+                // Planned Altitude Column
                 VStack(alignment: .trailing, spacing: 2) {
-                    Text("400 FT AGL CEILING")
+                    Text("\(plannedAltitude) FT AGL ENVELOPE")
                         .font(.caption2.weight(.heavy))
                         .tracking(0.5)
                         .foregroundStyle(DesignTokens.textTertiary)
 
                     HStack(alignment: .firstTextBaseline, spacing: 3) {
-                        Text(String(format: "%.1f", effective400ftWind))
+                        Text(String(format: "%.1f", effectivePlannedWind))
                             .font(.system(size: 28, weight: .semibold, design: .default))
                             .foregroundStyle(windStatusColor)
 
@@ -149,7 +165,7 @@ public struct WindShearCardView: View {
 
                     Text("Airframe Max: \(Int(maxRatedWind)) mph")
                         .font(.caption2.weight(.medium))
-                        .foregroundStyle(effective400ftWind > maxRatedWind ? DesignTokens.statusAlert : DesignTokens.textSecondary)
+                        .foregroundStyle(effectivePlannedWind > maxRatedWind ? DesignTokens.statusAlert : DesignTokens.textSecondary)
                 }
                 .frame(maxWidth: .infinity, alignment: .trailing)
             }

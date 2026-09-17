@@ -14,7 +14,8 @@ public enum RiskEngine {
     public static func evaluateRisk(
         airspace: AirspaceEvaluation,
         weather: AviationWeatherReport,
-        drone: DroneProfile
+        drone: DroneProfile,
+        plannedAltitudeFeet: Int = 400
     ) -> RiskAssessmentResult {
         var factors: [RiskFactorItem] = []
 
@@ -108,10 +109,29 @@ public enum RiskEngine {
         }
         factors.append(cloudFactor)
 
-        // 4. Wind at 400ft vs Aircraft Envelope
-        let windAt400 = weather.wind400ftMph
-        let gustAt400 = weather.windGust400ftMph ?? windAt400
-        let effectiveWind = max(windAt400, gustAt400)
+        // 4. Wind at Planned Altitude vs Aircraft Envelope
+        let targetAltitude = min(400, max(50, plannedAltitudeFeet))
+        let windAtAlt: Double
+        let gustAtAlt: Double?
+
+        if targetAltitude <= 75 {
+            windAtAlt = weather.surfaceWindSpeedMph
+            gustAtAlt = weather.surfaceWindGustMph
+        } else if targetAltitude <= 150 {
+            windAtAlt = weather.wind100ftMph
+            gustAtAlt = weather.surfaceWindGustMph != nil ? (weather.wind100ftMph * 1.2) : nil
+        } else if targetAltitude <= 250 {
+            windAtAlt = weather.wind200ftMph
+            gustAtAlt = weather.surfaceWindGustMph != nil ? (weather.wind200ftMph * 1.2) : nil
+        } else if targetAltitude <= 350 {
+            windAtAlt = weather.wind300ftMph
+            gustAtAlt = weather.surfaceWindGustMph != nil ? (weather.wind300ftMph * 1.2) : nil
+        } else {
+            windAtAlt = weather.wind400ftMph
+            gustAtAlt = weather.windGust400ftMph
+        }
+
+        let effectiveWind = max(windAtAlt, gustAtAlt ?? windAtAlt)
         let maxRated = drone.maxWindResistanceMph
 
         let windFactor: RiskFactorItem
@@ -119,21 +139,21 @@ public enum RiskEngine {
             windFactor = RiskFactorItem(
                 category: .windAloft,
                 severity: .noGo,
-                summary: String(format: "Estimated wind/gusts at 400ft (%.1f mph) exceed %@ maximum limit (%.1f mph). Risk of flyaway.", effectiveWind, drone.name, maxRated),
+                summary: String(format: "Wind/gusts at %dft (%.1f mph) exceed %@ maximum rating (%.1f mph). Risk of flyaway.", targetAltitude, effectiveWind, drone.name, maxRated),
                 regulatoryReference: "Manufacturer Flight Envelope"
             )
         } else if effectiveWind >= maxRated * 0.85 {
             windFactor = RiskFactorItem(
                 category: .windAloft,
                 severity: .caution,
-                summary: String(format: "Wind at 400ft (%.1f mph) is within 15%% of %@ maximum rating (%.1f mph). Expect turbulence.", effectiveWind, drone.name, maxRated),
+                summary: String(format: "Wind at %dft (%.1f mph) is within 15%% of %@ maximum rating (%.1f mph). Expect turbulence.", targetAltitude, effectiveWind, drone.name, maxRated),
                 regulatoryReference: "Pre-Flight Safety Buffer"
             )
         } else {
             windFactor = RiskFactorItem(
                 category: .windAloft,
                 severity: .safe,
-                summary: String(format: "400ft wind velocity (%.1f mph) is well within aircraft rating (%.1f mph).", effectiveWind, maxRated),
+                summary: String(format: "Wind at %dft AGL (%.1f mph) is safely within %@ rating (%.1f mph).", targetAltitude, effectiveWind, drone.name, maxRated),
                 regulatoryReference: "Manufacturer Flight Envelope"
             )
         }

@@ -26,6 +26,7 @@ public final class FlightDashboardViewModel: @unchecked Sendable {
     public var isLoading: Bool = false
     public var lastUpdated: Date?
     public var errorMessage: String?
+    public var plannedAltitudeFeet: Int = 400
 
     public var relativeLastUpdatedString: String {
         guard let last = lastUpdated else { return "Awaiting fix" }
@@ -111,15 +112,29 @@ public final class FlightDashboardViewModel: @unchecked Sendable {
         self.airspace = fetchedAirspace
         self.weather = fetchedWeather
 
-        // Evaluate RAM risk matrix against active aircraft specs
+        // Evaluate RAM risk matrix against active aircraft specs and planned altitude
         self.riskResult = RiskEngine.evaluateRisk(
             airspace: fetchedAirspace,
             weather: fetchedWeather,
-            drone: selectedDrone
+            drone: selectedDrone,
+            plannedAltitudeFeet: plannedAltitudeFeet
         )
 
         self.lastUpdated = Date()
         self.isLoading = false
+    }
+
+    /// Sets planned mission altitude (AGL) and re-evaluates risk matrix against wind profile.
+    public func setPlannedAltitude(_ altitude: Int) {
+        self.plannedAltitudeFeet = altitude
+        if let air = airspace, let w = weather {
+            self.riskResult = RiskEngine.evaluateRisk(
+                airspace: air,
+                weather: w,
+                drone: selectedDrone,
+                plannedAltitudeFeet: altitude
+            )
+        }
     }
 
     /// Selects active aircraft profile and re-evaluates risk.
@@ -128,17 +143,57 @@ public final class FlightDashboardViewModel: @unchecked Sendable {
         UserDefaults.standard.set(drone.id, forKey: "aerocheck.selectedDroneId")
 
         if let air = airspace, let w = weather {
-            self.riskResult = RiskEngine.evaluateRisk(airspace: air, weather: w, drone: drone)
+            self.riskResult = RiskEngine.evaluateRisk(
+                airspace: air,
+                weather: w,
+                drone: drone,
+                plannedAltitudeFeet: plannedAltitudeFeet
+            )
         }
     }
 
     /// Adds custom drone profile.
     public func addCustomDrone(_ profile: DroneProfile) {
         droneProfiles.append(profile)
+        saveDroneProfiles()
+        selectDrone(profile)
+    }
+
+    /// Updates existing drone profile (name, limits, etc.).
+    public func updateDrone(_ drone: DroneProfile) {
+        if let idx = droneProfiles.firstIndex(where: { $0.id == drone.id }) {
+            droneProfiles[idx] = drone
+            saveDroneProfiles()
+            if selectedDrone.id == drone.id {
+                selectDrone(drone)
+            }
+        }
+    }
+
+    /// Deletes drone profile.
+    public func deleteDrone(_ drone: DroneProfile) {
+        droneProfiles.removeAll(where: { $0.id == drone.id })
+        saveDroneProfiles()
+        if selectedDrone.id == drone.id {
+            if let fallback = droneProfiles.first {
+                selectDrone(fallback)
+            } else {
+                selectDrone(DroneProfile.default)
+            }
+        }
+    }
+
+    /// Resets fleet to factory DJI presets.
+    public func resetDroneFleetToDefaults() {
+        self.droneProfiles = DroneProfile.standardProfiles
+        UserDefaults.standard.removeObject(forKey: "aerocheck.droneProfiles")
+        selectDrone(DroneProfile.default)
+    }
+
+    private func saveDroneProfiles() {
         if let encoded = try? JSONEncoder().encode(droneProfiles) {
             UserDefaults.standard.set(encoded, forKey: "aerocheck.droneProfiles")
         }
-        selectDrone(profile)
     }
 
     /// Launches native LAANC USS app or opens web fallback.

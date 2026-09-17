@@ -25,6 +25,9 @@ struct ContentView: View {
                         // Tactical Flight Context Bar (GPS Location + Fleet Menu)
                         flightContextBar
 
+                        // Tactical Mission Altitude Selector (100ft - 400ft AGL)
+                        missionAltitudeSelector
+
                         // 1. Master Verdict Hero Banner
                         VerdictBannerView(
                             result: viewModel.riskResult,
@@ -47,12 +50,13 @@ struct ContentView: View {
                             airspace: viewModel.airspace
                         )
 
-                        // 4. Atmospheric Sounding & 400ft Wind Envelope
+                        // 4. Atmospheric Sounding & Altitude-Specific Wind Envelope
                         WindShearCardView(
                             weather: viewModel.weather,
                             drone: viewModel.selectedDrone,
                             densityAltitude: viewModel.riskResult?.densityAltitudeFeet ?? 0,
-                            thrustLossPercent: viewModel.riskResult?.thrustEfficiencyLossPercent
+                            thrustLossPercent: viewModel.riskResult?.thrustEfficiencyLossPercent,
+                            plannedAltitude: viewModel.plannedAltitudeFeet
                         )
 
                         // Clear padding so scroll view content clears the floating action capsule
@@ -74,11 +78,11 @@ struct ContentView: View {
                 ToolbarItem(placement: .topBarLeading) {
                     HStack(spacing: DesignTokens.space8) {
                         ZStack {
-                            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                            Circle()
                                 .fill(DesignTokens.surfaceSecondary)
-                                .frame(width: 32, height: 32)
+                                .frame(width: 34, height: 34)
                                 .overlay(
-                                    RoundedRectangle(cornerRadius: 8, style: .continuous)
+                                    Circle()
                                         .stroke(DesignTokens.borderHairline.opacity(0.8), lineWidth: 0.5)
                                 )
 
@@ -86,6 +90,7 @@ struct ContentView: View {
                                 .font(.system(size: 14, weight: .bold))
                                 .foregroundStyle(DesignTokens.accent)
                         }
+                        .frame(width: 34, height: 34)
 
                         Text("AeroCheck")
                             .font(.headline.weight(.heavy))
@@ -151,6 +156,15 @@ struct ContentView: View {
                     },
                     onAddCustom: { custom in
                         viewModel.addCustomDrone(custom)
+                    },
+                    onUpdate: { updated in
+                        viewModel.updateDrone(updated)
+                    },
+                    onDelete: { toDelete in
+                        viewModel.deleteDrone(toDelete)
+                    },
+                    onResetDefaults: {
+                        viewModel.resetDroneFleetToDefaults()
                     }
                 )
             }
@@ -278,6 +292,61 @@ struct ContentView: View {
             }
             .buttonStyle(.interactivePress)
         }
+    }
+
+    /// Tactical Planned Mission Altitude Selector (100ft, 200ft, 300ft, 400ft AGL)
+    /// Allows pilot to specify target flight altitude so low-altitude operations are not blocked
+    /// by high-altitude wind shear at 400ft.
+    private var missionAltitudeSelector: some View {
+        HStack(spacing: DesignTokens.space8) {
+            HStack(spacing: DesignTokens.space4) {
+                Image(systemName: "arrow.up.and.down.and.sparkles")
+                    .font(.system(size: 11, weight: .bold))
+                    .foregroundStyle(DesignTokens.accent)
+
+                Text("MISSION ALT")
+                    .font(.caption2.weight(.heavy).monospaced())
+                    .tracking(0.5)
+                    .foregroundStyle(DesignTokens.textTertiary)
+            }
+
+            Spacer()
+
+            HStack(spacing: DesignTokens.space4) {
+                ForEach([100, 200, 300, 400], id: \.self) { alt in
+                    let isSelected = viewModel.plannedAltitudeFeet == alt
+                    Button {
+                        let impact = UIImpactFeedbackGenerator(style: .light)
+                        impact.impactOccurred()
+                        withAnimation(.snappy(duration: 0.2)) {
+                            viewModel.setPlannedAltitude(alt)
+                        }
+                    } label: {
+                        Text("\(alt) FT")
+                            .font(.system(size: 11, weight: isSelected ? .bold : .semibold, design: .monospaced))
+                            .foregroundStyle(isSelected ? .white : DesignTokens.textSecondary)
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 6)
+                            .background(
+                                Capsule()
+                                    .fill(isSelected ? DesignTokens.accent : DesignTokens.surfaceTertiary)
+                            )
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("Set planned mission ceiling to \(alt) feet AGL")
+                }
+            }
+        }
+        .padding(.horizontal, DesignTokens.space12)
+        .padding(.vertical, 6)
+        .background(
+            RoundedRectangle(cornerRadius: DesignTokens.radiusInner, style: .continuous)
+                .fill(DesignTokens.surfaceSecondary)
+                .overlay(
+                    RoundedRectangle(cornerRadius: DesignTokens.radiusInner, style: .continuous)
+                        .stroke(DesignTokens.borderHairline.opacity(0.8), lineWidth: 0.5)
+                )
+        )
     }
 
     /// Premium Native Sticky Bottom Bar with Translucent Backdrop Blur
