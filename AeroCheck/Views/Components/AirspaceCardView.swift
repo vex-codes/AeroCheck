@@ -7,11 +7,12 @@
 
 import SwiftUI
 
-/// Tactical Airspace & Authorization card adhering to AAA aviation standards:
-/// - Clear, beautifully spaced data columns for Facility and UASFM Ceiling.
-/// - Large, sharp numeric readouts with monospaced precision.
-/// - Sleek 0.5pt hairline border with 16pt uniform padding.
-/// - Integrated LAANC authorization trigger.
+/// Seamless Airspace & LAANC Telemetry Section adhering to ForeFlight/DJI Fly:
+/// - Pure inset group layout with zero boxy container nesting.
+/// - Prominent 28pt Semibold numeric ceiling readout.
+/// - Clear, staggered data columns (Facility / Airspace Class vs UASFM Ceiling).
+/// - Borderless inline LAANC authorization action.
+/// - 0.5px subtle hairline separator.
 public struct AirspaceCardView: View {
     public let airspace: AirspaceEvaluation?
     public let onOpenLAANC: () -> Void
@@ -46,17 +47,17 @@ public struct AirspaceCardView: View {
     }
 
     public var body: some View {
-        VStack(alignment: .leading, spacing: DesignTokens.space16) {
-            // Header Row: Section Label + Classification Pill
+        VStack(alignment: .leading, spacing: DesignTokens.space12) {
+            // Section Header
             HStack(alignment: .center) {
                 Label {
-                    Text("AIRSPACE AUTHORIZATION")
-                        .font(.caption2.weight(.bold).monospaced())
+                    Text("AIRSPACE & AUTHORIZATION")
+                        .font(.caption2.weight(.heavy))
                         .tracking(0.6)
                         .foregroundStyle(DesignTokens.textTertiary)
                 } icon: {
                     Image(systemName: "shield.checkered")
-                        .font(.caption)
+                        .font(.caption2)
                         .foregroundStyle(DesignTokens.accent)
                 }
 
@@ -64,80 +65,68 @@ public struct AirspaceCardView: View {
 
                 // Classification Pill
                 Text(airspaceClass.badgeLabel)
-                    .font(.caption2.weight(.heavy).monospaced())
-                    .tracking(0.5)
+                    .font(.caption2.weight(.heavy))
+                    .tracking(0.4)
                     .foregroundStyle(badgeColor)
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 5)
-                    .background(
-                        Capsule().fill(badgeBackground)
-                    )
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 3)
+                    .background(Capsule().fill(badgeBackground))
             }
 
-            // Balanced Data Columns: Facility & Ceiling Readouts
+            // Staggered Telemetry Layout (Facility vs 28pt Ceiling)
             HStack(alignment: .top, spacing: DesignTokens.space16) {
-                // Facility Column
+                // Left Column: Facility & Identification
                 VStack(alignment: .leading, spacing: DesignTokens.space4) {
-                    Text("FACILITY / JURISDICTION")
-                        .font(.caption2.weight(.semibold).monospaced())
-                        .tracking(0.4)
-                        .foregroundStyle(DesignTokens.textTertiary)
-
                     Text(airspace?.facilityName ?? "Class G Uncontrolled Airspace")
-                        .font(.headline.weight(.semibold))
+                        .font(.headline.weight(.bold))
                         .foregroundStyle(DesignTokens.textPrimary)
                         .lineLimit(2)
                         .fixedSize(horizontal: false, vertical: true)
 
-                    if let ident = airspace?.airportIdent {
-                        Text("IDENT: \(ident)")
-                            .font(.caption.weight(.bold).monospaced())
-                            .foregroundStyle(DesignTokens.accent)
-                            .padding(.top, 1)
+                    HStack(spacing: DesignTokens.space6) {
+                        if let ident = airspace?.airportIdent {
+                            Text(ident)
+                                .font(.caption.weight(.bold).monospaced())
+                                .foregroundStyle(DesignTokens.accent)
+                        }
+
+                        Text(airspace?.requiresLAANC == true ? "LAANC Authorization Required" : "Uncontrolled § 107.51")
+                            .font(.caption)
+                            .foregroundStyle(DesignTokens.textSecondary)
                     }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
 
-                // UASFM Ceiling Column
-                VStack(alignment: .trailing, spacing: DesignTokens.space4) {
+                // Right Column: 28pt Numeric UASFM Ceiling
+                VStack(alignment: .trailing, spacing: 2) {
                     Text("MAX UASFM CEILING")
-                        .font(.caption2.weight(.semibold).monospaced())
-                        .tracking(0.4)
+                        .font(.caption2.weight(.heavy))
+                        .tracking(0.5)
                         .foregroundStyle(DesignTokens.textTertiary)
 
-                    if let ceiling = airspace?.uasfmCeilingFeet {
-                        HStack(alignment: .firstTextBaseline, spacing: 3) {
-                            Text("\(ceiling)")
-                                .font(.system(size: 28, weight: .heavy, design: .monospaced))
-                                .foregroundStyle(ceiling == 0 ? DesignTokens.statusAlert : DesignTokens.textPrimary)
-                            Text("FT AGL")
-                                .font(.caption.weight(.heavy).monospaced())
-                                .foregroundStyle(DesignTokens.textSecondary)
-                        }
-                    } else {
-                        HStack(alignment: .firstTextBaseline, spacing: 3) {
-                            Text("400")
-                                .font(.system(size: 28, weight: .heavy, design: .monospaced))
-                                .foregroundStyle(DesignTokens.statusSafe)
-                            Text("FT AGL")
-                                .font(.caption.weight(.heavy).monospaced())
-                                .foregroundStyle(DesignTokens.textSecondary)
-                        }
+                    let ceilingVal = airspace?.uasfmCeilingFeet ?? 400
+                    HStack(alignment: .firstTextBaseline, spacing: 3) {
+                        Text("\(ceilingVal)")
+                            .font(.system(size: 28, weight: .semibold, design: .default))
+                            .foregroundStyle(ceilingVal == 0 ? DesignTokens.statusAlert : DesignTokens.textPrimary)
+
+                        Text("FT AGL")
+                            .font(.caption2.weight(.heavy))
+                            .foregroundStyle(DesignTokens.textTertiary)
                     }
+
+                    Text(ceilingVal == 0 ? "Zero Grid Ceiling" : "Standard Limit")
+                        .font(.caption2.weight(.medium))
+                        .foregroundStyle(ceilingVal == 0 ? DesignTokens.statusAlert : DesignTokens.statusSafe)
                 }
                 .frame(maxWidth: .infinity, alignment: .trailing)
             }
-            .padding(DesignTokens.space12)
-            .background(
-                RoundedRectangle(cornerRadius: DesignTokens.radiusInner, style: .continuous)
-                    .fill(DesignTokens.surfaceTertiary)
-            )
 
-            // Regulatory Note Callout
+            // Regulatory Note Callout (Clean inset row)
             if let note = airspace?.regulatoryNote {
                 HStack(alignment: .top, spacing: DesignTokens.space8) {
                     Image(systemName: "info.circle.fill")
-                        .font(.caption)
+                        .font(.caption2)
                         .foregroundStyle(badgeColor)
                         .padding(.top, 2)
 
@@ -145,41 +134,41 @@ public struct AirspaceCardView: View {
                         .font(.footnote)
                         .foregroundStyle(DesignTokens.textSecondary)
                         .lineSpacing(2)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
+                .padding(.vertical, DesignTokens.space4)
             }
 
-            // LAANC Direct Filing Action (if required)
+            // LAANC Action Trigger (if required)
             if airspace?.requiresLAANC == true {
                 Button(action: onOpenLAANC) {
                     HStack(spacing: DesignTokens.space8) {
                         Image(systemName: "arrow.up.right.square")
                             .font(.subheadline.weight(.bold))
-                        Text(airspace?.isZeroCeiling == true ? "File Manual Waiver via LAANC Provider" : "Request Instant LAANC Authorization")
+                        Text(airspace?.isZeroCeiling == true ? "Submit Safety Waiver via LAANC" : "Request Instant LAANC Authorization")
                             .font(.subheadline.weight(.semibold))
                     }
                     .foregroundStyle(.white)
                     .frame(maxWidth: .infinity)
-                    .frame(minHeight: 44)
+                    .frame(height: 44)
                     .background(
-                        RoundedRectangle(cornerRadius: DesignTokens.radiusInner, style: .continuous)
-                            .fill(airspace?.isZeroCeiling == true ? DesignTokens.surfaceTertiary : DesignTokens.accent)
+                        Capsule(style: .continuous)
+                            .fill(airspace?.isZeroCeiling == true ? DesignTokens.statusAlertMuted : DesignTokens.accent)
                             .overlay(
-                                RoundedRectangle(cornerRadius: DesignTokens.radiusInner, style: .continuous)
-                                    .stroke(airspace?.isZeroCeiling == true ? DesignTokens.statusAlert.opacity(0.5) : Color.clear, lineWidth: 1)
+                                Capsule(style: .continuous)
+                                    .stroke(airspace?.isZeroCeiling == true ? DesignTokens.statusAlert : Color.white.opacity(0.15), lineWidth: 0.5)
                             )
                     )
                 }
                 .buttonStyle(.interactivePress)
             }
+
+            // 0.5px Hairline Separator
+            Rectangle()
+                .fill(DesignTokens.borderHairline)
+                .frame(height: 0.5)
+                .padding(.top, DesignTokens.space4)
         }
-        .padding(DesignTokens.space16)
-        .background(
-            RoundedRectangle(cornerRadius: DesignTokens.radiusCard, style: .continuous)
-                .fill(DesignTokens.surfaceSecondary)
-                .overlay(
-                    RoundedRectangle(cornerRadius: DesignTokens.radiusCard, style: .continuous)
-                        .stroke(DesignTokens.borderHairline.opacity(0.8), lineWidth: 0.5)
-                )
-        )
+        .padding(.vertical, DesignTokens.space8)
     }
 }

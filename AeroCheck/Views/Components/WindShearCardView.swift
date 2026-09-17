@@ -7,11 +7,12 @@
 
 import SwiftUI
 
-/// Altitudinal Wind Shear Profile & Telemetry card adhering to ForeFlight/DJI Fly standards:
-/// - Surface vs 400ft ceiling comparison gauge with sharp monospaced figures.
-/// - Streamlined altitudinal shear gradient meter.
-/// - Clear data columns for Visibility, Cloud Ceiling, and Density Altitude.
-/// - Sleek 0.5pt hairline border with 16pt uniform padding.
+/// Professional Altitudinal Wind Shear & Atmospheric Telemetry Grid adhering to ForeFlight/DJI Fly:
+/// - Edge-to-edge seamless presentation with zero boxy container nesting.
+/// - Staggered multi-column dashboard grid with 28pt Semibold numbers.
+/// - Sleek 3px multi-segment shear gradient track lines with numeric markers.
+/// - Borderless 3-column pill layout for Visibility, Cloud Base, and Density Altitude.
+/// - Clean 0.5px hairline bottom divider.
 public struct WindShearCardView: View {
     public let weather: AviationWeatherReport?
     public let drone: DroneProfile
@@ -57,155 +58,157 @@ public struct WindShearCardView: View {
     public var body: some View {
         VStack(alignment: .leading, spacing: DesignTokens.space16) {
             // Header Row
-            HStack {
+            HStack(alignment: .center) {
                 Label {
                     Text("ATMOSPHERIC SOUNDING & WIND SHEAR")
-                        .font(.caption2.weight(.bold).monospaced())
+                        .font(.caption2.weight(.heavy))
                         .tracking(0.6)
                         .foregroundStyle(DesignTokens.textTertiary)
                 } icon: {
                     Image(systemName: "wind")
-                        .font(.caption)
+                        .font(.caption2)
                         .foregroundStyle(DesignTokens.accent)
                 }
 
                 Spacer()
 
-                Text(wReport.isHighAltitudeModelLive ? "OPEN-METEO ALOFT" : "HELLMANN SHEAR MODEL")
-                    .font(.caption2.weight(.bold).monospaced())
+                Text(wReport.isHighAltitudeModelLive ? "OPEN-METEO ALOFT" : "HELLMANN MODEL")
+                    .font(.caption2.weight(.bold))
                     .tracking(0.4)
                     .foregroundStyle(DesignTokens.accent)
                     .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
-                    .background(
-                        Capsule().fill(DesignTokens.accentMuted)
-                    )
+                    .padding(.vertical, 3)
+                    .background(Capsule().fill(DesignTokens.accentMuted))
             }
 
-            // Surface vs 400ft Ceiling Telemetry Block
-            HStack(spacing: DesignTokens.space12) {
+            // Staggered Multi-Column Wind Telemetry Grid
+            HStack(alignment: .top, spacing: DesignTokens.space16) {
                 // Surface Column
-                VStack(alignment: .leading, spacing: DesignTokens.space4) {
-                    Text("SURFACE WIND (10M)")
-                        .font(.caption2.weight(.semibold).monospaced())
-                        .tracking(0.4)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("SURFACE (10M)")
+                        .font(.caption2.weight(.heavy))
+                        .tracking(0.5)
                         .foregroundStyle(DesignTokens.textTertiary)
 
                     HStack(alignment: .firstTextBaseline, spacing: 3) {
                         Text(String(format: "%.1f", wReport.surfaceWindSpeedMph))
-                            .font(.system(size: 28, weight: .heavy, design: .monospaced))
+                            .font(.system(size: 28, weight: .semibold, design: .default))
                             .foregroundStyle(DesignTokens.textPrimary)
+
                         Text("MPH")
-                            .font(.caption.weight(.heavy).monospaced())
-                            .foregroundStyle(DesignTokens.textSecondary)
+                            .font(.caption2.weight(.heavy))
+                            .foregroundStyle(DesignTokens.textTertiary)
                     }
 
                     if let gust = wReport.surfaceWindGustMph {
-                        Text(String(format: "Gusts: %.1f mph", gust))
-                            .font(.caption.weight(.medium))
+                        Text(String(format: "Gusts to %.1f mph", gust))
+                            .font(.caption2.weight(.medium))
                             .foregroundStyle(DesignTokens.statusCaution)
                     } else {
-                        Text("Stable Surface Air")
-                            .font(.caption)
-                            .foregroundStyle(DesignTokens.textTertiary)
+                        Text("Steady Surface Flow")
+                            .font(.caption2)
+                            .foregroundStyle(DesignTokens.textSecondary)
                     }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
 
-                // Gradient Vector Indicator
+                // Central Shear Vector Indicator
                 VStack(spacing: 2) {
                     Image(systemName: "arrow.up.right")
-                        .font(.headline.weight(.bold))
+                        .font(.subheadline.weight(.heavy))
                         .foregroundStyle(windStatusColor)
+
                     let delta = effective400ftWind - wReport.surfaceWindSpeedMph
                     Text(String(format: "+%.1f", max(0, delta)))
                         .font(.caption2.weight(.heavy).monospaced())
                         .foregroundStyle(windStatusColor)
-                }
-                .padding(.horizontal, DesignTokens.space4)
 
-                // 400ft AGL Column
-                VStack(alignment: .trailing, spacing: DesignTokens.space4) {
+                    Text("SHEAR")
+                        .font(.system(size: 9, weight: .heavy))
+                        .tracking(0.5)
+                        .foregroundStyle(DesignTokens.textTertiary)
+                }
+                .padding(.top, 6)
+
+                // 400 FT AGL Ceiling Column
+                VStack(alignment: .trailing, spacing: 2) {
                     Text("400 FT AGL CEILING")
-                        .font(.caption2.weight(.semibold).monospaced())
-                        .tracking(0.4)
+                        .font(.caption2.weight(.heavy))
+                        .tracking(0.5)
                         .foregroundStyle(DesignTokens.textTertiary)
 
                     HStack(alignment: .firstTextBaseline, spacing: 3) {
                         Text(String(format: "%.1f", effective400ftWind))
-                            .font(.system(size: 28, weight: .heavy, design: .monospaced))
+                            .font(.system(size: 28, weight: .semibold, design: .default))
                             .foregroundStyle(windStatusColor)
+
                         Text("MPH")
-                            .font(.caption.weight(.heavy).monospaced())
-                            .foregroundStyle(DesignTokens.textSecondary)
+                            .font(.caption2.weight(.heavy))
+                            .foregroundStyle(DesignTokens.textTertiary)
                     }
 
-                    Text("Max Envelope: \(Int(maxRatedWind)) mph")
-                        .font(.caption.weight(.medium))
-                        .foregroundStyle(windStatusColor)
+                    Text("Airframe Max: \(Int(maxRatedWind)) mph")
+                        .font(.caption2.weight(.medium))
+                        .foregroundStyle(effective400ftWind > maxRatedWind ? DesignTokens.statusAlert : DesignTokens.textSecondary)
                 }
                 .frame(maxWidth: .infinity, alignment: .trailing)
             }
-            .padding(DesignTokens.space12)
-            .background(
-                RoundedRectangle(cornerRadius: DesignTokens.radiusInner, style: .continuous)
-                    .fill(DesignTokens.surfaceTertiary)
-            )
 
-            // Streamlined Altitudinal Gradient Bars
+            // Sleek Ultra-Thin Multi-Segment Shear Track Lines (3px height)
             VStack(alignment: .leading, spacing: DesignTokens.space8) {
                 Text("ALTITUDE SHEAR GRADIENT (AGL)")
-                    .font(.caption2.weight(.semibold).monospaced())
-                    .tracking(0.4)
+                    .font(.caption2.weight(.heavy))
+                    .tracking(0.5)
                     .foregroundStyle(DesignTokens.textTertiary)
 
-                VStack(spacing: DesignTokens.space8) {
-                    altitudeBar(label: "400 ft (Ceiling)", wind: wReport.wind400ftMph, maxLimit: maxRatedWind, isKey: true)
-                    altitudeBar(label: "Surface (10m)", wind: wReport.surfaceWindSpeedMph, maxLimit: maxRatedWind, isKey: false)
+                VStack(spacing: 6) {
+                    sleekTrackLine(label: "400 FT", wind: wReport.wind400ftMph, maxLimit: maxRatedWind, isCeiling: true)
+                    sleekTrackLine(label: "200 FT", wind: wReport.wind200ftMph, maxLimit: maxRatedWind, isCeiling: false)
+                    sleekTrackLine(label: "SFC", wind: wReport.surfaceWindSpeedMph, maxLimit: maxRatedWind, isCeiling: false)
                 }
             }
 
-            // Key Environmental Readouts (Visibility, Ceiling, Density Alt)
+            // Seamless Borderless 3-Column Pill Layout (Zero crypto-box styling)
             HStack(spacing: DesignTokens.space8) {
-                metricCell(
+                borderlessMetricPill(
                     title: "VISIBILITY",
                     value: String(format: "%.1f SM", wReport.visibilityStatuteMiles),
                     statusColor: wReport.visibilityStatuteMiles >= 5.0 ? DesignTokens.statusSafe : (wReport.visibilityStatuteMiles >= 3.0 ? DesignTokens.statusCaution : DesignTokens.statusAlert),
                     subtitle: wReport.flightCategory.rawValue
                 )
 
-                metricCell(
+                borderlessMetricPill(
                     title: "CLOUD BASE",
-                    value: wReport.cloudCeilingFeet != nil ? "\(wReport.cloudCeilingFeet!) ft" : "CLR / ∞",
+                    value: wReport.cloudCeilingFeet != nil ? "\(wReport.cloudCeilingFeet!) FT" : "CLR / ∞",
                     statusColor: (wReport.cloudCeilingFeet == nil || wReport.cloudCeilingFeet! > 1000) ? DesignTokens.statusSafe : (wReport.cloudCeilingFeet! >= 500 ? DesignTokens.statusCaution : DesignTokens.statusAlert),
                     subtitle: "§ 107.51 Buffer"
                 )
 
-                metricCell(
+                borderlessMetricPill(
                     title: "DENSITY ALT",
-                    value: "\(Int(densityAltitude)) ft",
+                    value: "\(Int(densityAltitude)) FT",
                     statusColor: densityAltitude > 4000 ? DesignTokens.statusCaution : DesignTokens.statusSafe,
-                    subtitle: thrustLossPercent != nil ? "-\(thrustLossPercent!)% Thrust" : "Nominal"
+                    subtitle: thrustLossPercent != nil ? "-\(Int(thrustLossPercent!))% Thrust" : "Nominal"
                 )
             }
 
-            // Raw Station METAR Toggle with 44pt tap target
+            // Raw Station METAR disclosure button
             Button {
                 withAnimation(.snappy(duration: 0.25)) {
                     showRawMetar.toggle()
                 }
             } label: {
-                HStack {
+                HStack(spacing: 6) {
                     Image(systemName: "terminal")
-                        .font(.caption)
-                    Text(showRawMetar ? "Hide Raw Station METAR" : "View Station METAR (\(wReport.stationId))")
-                        .font(.footnote.weight(.medium).monospaced())
+                        .font(.caption2)
+                    Text(showRawMetar ? "Hide Raw METAR" : "Raw METAR (\(wReport.stationId))")
+                        .font(.caption.weight(.medium))
                     Spacer()
                     Image(systemName: showRawMetar ? "chevron.up" : "chevron.down")
                         .font(.caption2.weight(.bold))
                 }
-                .foregroundStyle(DesignTokens.textSecondary)
-                .frame(minHeight: 44)
+                .foregroundStyle(DesignTokens.textTertiary)
+                .frame(height: 32)
                 .contentShape(Rectangle())
             }
             .buttonStyle(.interactivePress)
@@ -218,77 +221,77 @@ public struct WindShearCardView: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .background(
                         RoundedRectangle(cornerRadius: DesignTokens.radiusInner, style: .continuous)
-                            .fill(DesignTokens.surfaceTertiary)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: DesignTokens.radiusInner, style: .continuous)
-                                    .stroke(DesignTokens.borderHairline.opacity(0.8), lineWidth: 0.5)
-                            )
+                            .fill(DesignTokens.surfaceSecondary)
                     )
             }
+
+            // 0.5px Hairline Separator
+            Rectangle()
+                .fill(DesignTokens.borderHairline)
+                .frame(height: 0.5)
+                .padding(.top, DesignTokens.space4)
         }
-        .padding(DesignTokens.space16)
-        .background(
-            RoundedRectangle(cornerRadius: DesignTokens.radiusCard, style: .continuous)
-                .fill(DesignTokens.surfaceSecondary)
-                .overlay(
-                    RoundedRectangle(cornerRadius: DesignTokens.radiusCard, style: .continuous)
-                        .stroke(DesignTokens.borderHairline.opacity(0.8), lineWidth: 0.5)
-                )
-        )
+        .padding(.vertical, DesignTokens.space8)
     }
 
-    // MARK: - Subcomponents
+    // MARK: - Sleek Track Line Subcomponent (3px height)
 
-    private func altitudeBar(label: String, wind: Double, maxLimit: Double, isKey: Bool) -> some View {
+    private func sleekTrackLine(label: String, wind: Double, maxLimit: Double, isCeiling: Bool) -> some View {
         HStack(spacing: DesignTokens.space8) {
             Text(label)
-                .font(.caption.weight(isKey ? .bold : .regular).monospaced())
-                .foregroundStyle(isKey ? DesignTokens.textPrimary : DesignTokens.textSecondary)
-                .frame(width: 120, alignment: .leading)
+                .font(.caption2.weight(isCeiling ? .bold : .medium).monospaced())
+                .foregroundStyle(isCeiling ? DesignTokens.textPrimary : DesignTokens.textTertiary)
+                .frame(width: 52, alignment: .leading)
 
             GeometryReader { geo in
-                let ratio = min(1.0, max(0.05, wind / max(30.0, maxLimit * 1.2)))
+                let ratio = min(1.0, max(0.04, wind / max(30.0, maxLimit * 1.25)))
                 let barWidth = geo.size.width * ratio
+                let barColor = wind > maxLimit ? DesignTokens.statusAlert : (wind > maxLimit * 0.85 ? DesignTokens.statusCaution : DesignTokens.accent)
 
                 ZStack(alignment: .leading) {
-                    RoundedRectangle(cornerRadius: 3, style: .continuous)
-                        .fill(DesignTokens.surfaceTertiary)
+                    // Muted background track line
+                    Capsule()
+                        .fill(Color.white.opacity(0.07))
 
-                    RoundedRectangle(cornerRadius: 3, style: .continuous)
-                        .fill(wind > maxLimit ? DesignTokens.statusAlert : (wind > maxLimit * 0.85 ? DesignTokens.statusCaution : DesignTokens.accent))
+                    // Active track segment
+                    Capsule()
+                        .fill(barColor)
                         .frame(width: barWidth)
                 }
             }
-            .frame(height: 8)
+            .frame(height: 3)
 
             Text(String(format: "%.1f mph", wind))
-                .font(.caption.weight(.bold).monospaced())
-                .foregroundStyle(wind > maxLimit ? DesignTokens.statusAlert : DesignTokens.textPrimary)
-                .frame(width: 60, alignment: .trailing)
+                .font(.caption2.weight(.semibold).monospaced())
+                .foregroundStyle(wind > maxLimit ? DesignTokens.statusAlert : DesignTokens.textSecondary)
+                .frame(width: 58, alignment: .trailing)
         }
-        .frame(height: 18)
+        .frame(height: 16)
     }
 
-    private func metricCell(title: String, value: String, statusColor: Color, subtitle: String) -> some View {
-        VStack(alignment: .leading, spacing: DesignTokens.space4) {
+    // MARK: - Borderless Metric Pill (Seamless, minimal geometric footprint)
+
+    private func borderlessMetricPill(title: String, value: String, statusColor: Color, subtitle: String) -> some View {
+        VStack(alignment: .leading, spacing: 3) {
             Text(title)
-                .font(.caption2.weight(.bold).monospaced())
-                .tracking(0.3)
+                .font(.system(size: 10, weight: .heavy))
+                .tracking(0.5)
                 .foregroundStyle(DesignTokens.textTertiary)
 
             Text(value)
-                .font(.subheadline.weight(.heavy).monospaced())
+                .font(.system(size: 17, weight: .bold, design: .default))
                 .foregroundStyle(statusColor)
 
             Text(subtitle)
                 .font(.caption2)
                 .foregroundStyle(DesignTokens.textSecondary)
         }
-        .padding(DesignTokens.space12)
+        .padding(.horizontal, 10)
+        .padding(.vertical, 8)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(
             RoundedRectangle(cornerRadius: DesignTokens.radiusInner, style: .continuous)
-                .fill(DesignTokens.surfaceTertiary)
+                .fill(DesignTokens.surfaceSecondary.opacity(0.6))
         )
     }
 }

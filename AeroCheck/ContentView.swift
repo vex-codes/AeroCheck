@@ -28,7 +28,9 @@ struct ContentView: View {
                         // 1. Master Verdict Hero Banner
                         VerdictBannerView(
                             result: viewModel.riskResult,
-                            isLoading: viewModel.isLoading
+                            isLoading: viewModel.isLoading,
+                            relativeTime: viewModel.relativeLastUpdatedString,
+                            stationId: viewModel.weather?.stationId
                         )
 
                         // 2. Tactical Airspace & LAANC Authorization
@@ -54,7 +56,7 @@ struct ContentView: View {
                         )
 
                         // Clear padding so scroll view content clears the floating action capsule
-                        Color.clear.frame(height: 76)
+                        Color.clear.frame(height: 88)
                     }
                     .padding(.horizontal, DesignTokens.space16)
                     .padding(.top, DesignTokens.space8)
@@ -136,6 +138,11 @@ struct ContentView: View {
                 viewModel.onAppear()
                 try? await Task.sleep(nanoseconds: 600_000_000)
                 await viewModel.refreshData()
+            }
+            .onChange(of: viewModel.locationManager.coordinate?.latitude) { _, _ in
+                Task {
+                    await viewModel.refreshData()
+                }
             }
         }
     }
@@ -233,25 +240,31 @@ struct ContentView: View {
         }
     }
 
-    /// Premium Floating Bottom Action Capsule
+    /// Premium Native Sticky Bottom Bar with Translucent Backdrop Blur
     private var floatingActionAnchor: some View {
         VStack(spacing: 0) {
+            Rectangle()
+                .fill(DesignTokens.borderHairline)
+                .frame(height: 0.5)
+
             Button {
                 viewModel.showChecklistSheet = true
             } label: {
                 HStack(spacing: DesignTokens.space12) {
                     Image(systemName: "checklist.checked")
-                        .font(.subheadline.weight(.heavy))
+                        .font(.headline.weight(.heavy))
 
                     Text("Pre-Flight Verification & Sign-Off")
                         .font(.subheadline.weight(.bold))
                         .tracking(-0.2)
 
-                    Image(systemName: "arrow.right")
-                        .font(.caption.weight(.bold))
+                    Spacer()
+
+                    Image(systemName: "arrow.right.circle.fill")
+                        .font(.title3.weight(.bold))
                 }
                 .foregroundStyle(.white)
-                .padding(.horizontal, 22)
+                .padding(.horizontal, 20)
                 .frame(height: 52)
                 .frame(maxWidth: .infinity)
                 .background(
@@ -265,20 +278,10 @@ struct ContentView: View {
             }
             .buttonStyle(.interactivePress)
             .padding(.horizontal, DesignTokens.space16)
-            .padding(.bottom, DesignTokens.space8)
+            .padding(.top, 10)
+            .padding(.bottom, 6)
         }
-        .background(
-            LinearGradient(
-                colors: [
-                    DesignTokens.surfacePrimary.opacity(0.0),
-                    DesignTokens.surfacePrimary.opacity(0.85),
-                    DesignTokens.surfacePrimary
-                ],
-                startPoint: .top,
-                endPoint: .bottom
-            )
-            .ignoresSafeArea(edges: .bottom)
-        )
+        .background(.ultraThinMaterial)
     }
 }
 

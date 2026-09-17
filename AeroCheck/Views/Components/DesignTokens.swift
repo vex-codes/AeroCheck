@@ -52,7 +52,9 @@ public enum DesignTokens {
 
     // MARK: - Layout Rhythm (8pt Mathematical Grid)
     public static let space4: CGFloat = 4.0
+    public static let space6: CGFloat = 6.0
     public static let space8: CGFloat = 8.0
+    public static let space10: CGFloat = 10.0
     public static let space12: CGFloat = 12.0
     public static let space16: CGFloat = 16.0
     public static let space20: CGFloat = 20.0

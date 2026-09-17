@@ -45,7 +45,7 @@ public actor WeatherService {
         }
 
         components.queryItems = [
-            URLQueryItem(name: "bbox", value: "\(minLon),\(minLat),\(maxLon),\(maxLat)"),
+            URLQueryItem(name: "bbox", value: "\(minLat),\(minLon),\(maxLat),\(maxLon)"),
             URLQueryItem(name: "format", value: "json")
         ]
 
@@ -114,7 +114,12 @@ public actor WeatherService {
         coordinate: CLLocationCoordinate2D
     ) -> AviationWeatherReport {
         let stationId = metar?.icaoId ?? "LOCAL"
-        let obsDate = Date()
+        let obsDate: Date
+        if let sec = metar?.obsTime {
+            obsDate = Date(timeIntervalSince1970: TimeInterval(sec))
+        } else {
+            obsDate = Date()
+        }
         let rawMetar = metar?.rawOb ?? "METAR \(stationId) AUTO 00000KT 10SM CLR 20/10 A2992"
 
         // Surface winds (prefer METAR knots converted to mph, fallback to Open-Meteo 10m)
@@ -148,13 +153,19 @@ public actor WeatherService {
         }
 
         // Flight Category
-        let fltCatStr = metar?.fltcat?.uppercased() ?? "VFR"
+        let fltCatStr = (metar?.fltCat ?? metar?.fltcat)?.uppercased() ?? "VFR"
         let flightCategory = FlightCategory(rawValue: fltCatStr) ?? .vfr
 
-        // Cloud Ceiling in feet AGL
+        // Cloud Ceiling in feet AGL (lowest BKN / OVC layer)
         let ceilingFeet: Int?
         if let ceilHundreds = metar?.ceil {
             ceilingFeet = Int(ceilHundreds * 100)
+        } else if let clouds = metar?.clouds {
+            let bknOrOvc = clouds.filter {
+                let cov = $0.cover?.uppercased() ?? ""
+                return cov == "BKN" || cov == "OVC" || cov == "VV"
+            }
+            ceilingFeet = bknOrOvc.compactMap { $0.base }.min()
         } else {
             ceilingFeet = nil // Clear / unlimited
         }

@@ -26,6 +26,20 @@ public final class FlightDashboardViewModel: @unchecked Sendable {
     public var isLoading: Bool = false
     public var lastUpdated: Date?
     public var errorMessage: String?
+
+    public var relativeLastUpdatedString: String {
+        guard let last = lastUpdated else { return "Awaiting fix" }
+        let diff = max(0, Int(-last.timeIntervalSinceNow))
+        if diff < 15 {
+            return "Live"
+        } else if diff < 60 {
+            return "\(diff)s ago"
+        } else if diff < 3600 {
+            return "\(diff / 60)m ago"
+        } else {
+            return "\(diff / 3600)h ago"
+        }
+    }
     
     // Terrain and operational variables
     public var terrainRoughness: TerrainRoughness = .suburban

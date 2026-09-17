@@ -26,6 +26,17 @@ public enum FlightCategory: String, Codable, Sendable {
     }
 }
 
+/// Raw DTO representing individual cloud layer from NOAA METAR JSON.
+nonisolated public struct NOAACloudLayer: Codable, Sendable {
+    public let cover: String?
+    public let base: Int?
+
+    public init(cover: String? = nil, base: Int? = nil) {
+        self.cover = cover
+        self.base = base
+    }
+}
+
 /// Raw DTO parsed from NOAA Aviation Weather Center JSON API.
 nonisolated public struct NOAAMetarItem: Codable, Sendable {
     public let icaoId: String?
@@ -40,6 +51,9 @@ nonisolated public struct NOAAMetarItem: Codable, Sendable {
     public let altim: Double? // hPa or inHg
     public let ceil: Double? // hundreds of feet (e.g., 25 = 2500ft)
     public let fltcat: String?
+    public let fltCat: String?
+    public let cover: String?
+    public let clouds: [NOAACloudLayer]?
     public let rawOb: String?
     public let lat: Double?
     public let lon: Double?

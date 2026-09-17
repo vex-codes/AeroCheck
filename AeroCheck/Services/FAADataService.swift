@@ -12,8 +12,8 @@ import CoreLocation
 public actor FAADataService {
     public static let shared = FAADataService()
 
-    private let uasfmEndpoint = "https://services6.arcgis.com/ssFJjBtikUpload/arcgis/rest/services/UASFM_Admin_Feature_Layer/FeatureServer/0/query"
-    private let controlledAirspaceEndpoint = "https://services6.arcgis.com/ssFJjBtikUpload/arcgis/rest/services/Controlled_Airspace/FeatureServer/0/query"
+    private let uasfmEndpoint = "https://services6.arcgis.com/ssFJjBXIUyZDrSYZ/arcgis/rest/services/FAA_UAS_FacilityMap_Data_V5/FeatureServer/0/query"
+    private let controlledAirspaceEndpoint = "https://services6.arcgis.com/ssFJjBXIUyZDrSYZ/arcgis/rest/services/Controlled_Airspace/FeatureServer/0/query"
 
     private let session: URLSession
 
@@ -89,15 +89,15 @@ public actor FAADataService {
                 ceiling = ceilInt
             }
 
-            if let name = attrs["NAME"]?.stringValue ?? attrs["AIRPORT_NAME"]?.stringValue {
+            if let name = attrs["APT1_NAME"]?.stringValue ?? attrs["NAME"]?.stringValue ?? attrs["AIRPORT_NAME"]?.stringValue {
                 facilityName = name
             }
 
-            if let ident = attrs["IDENT"]?.stringValue ?? attrs["ICAO_ID"]?.stringValue {
+            if let ident = attrs["APT1_ICAO"]?.stringValue ?? attrs["APT1_FAAID"]?.stringValue ?? attrs["IDENT"]?.stringValue ?? attrs["ICAO_ID"]?.stringValue {
                 airportIdent = ident
             }
 
-            if let clsStr = attrs["AIRSPACE_CLASS"]?.stringValue?.uppercased() {
+            if let clsStr = attrs["AIRSPACE_CLASS"]?.stringValue?.uppercased() ?? attrs["CLASS"]?.stringValue?.uppercased() {
                 detectedClass = AirspaceClass(rawValue: clsStr) ?? .classD
             } else {
                 detectedClass = .classD // Controlled default when inside UASFM grid

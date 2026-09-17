@@ -9,9 +9,11 @@ import SwiftUI
 import MapKit
 
 /// Tactical airspace Map view adhering to ForeFlight/DJI Fly aesthetic:
-/// - Seamless embedded map matching the 16pt card curvature.
-/// - Floating location button with native ultraThinMaterial vibrancy and circular stroke.
-/// - Crisp tactical Part 107 operational radius overlay.
+/// - Edge-to-edge seamless presentation with zero boxy container nesting.
+/// - Embedded high-contrast satellite/hybrid map with 12pt inner corner radius.
+/// - Floating location button with native ultraThinMaterial vibrancy.
+/// - Crisp tactical Part 107 operational radius overlay (122m / 400ft).
+/// - 0.5px hairline bottom divider.
 public struct FlightMapView: View {
     public let coordinate: CLLocationCoordinate2D?
     public let airspace: AirspaceEvaluation?
@@ -33,22 +35,22 @@ public struct FlightMapView: View {
             HStack {
                 Label {
                     Text("TACTICAL MAP & BUFFER RADIUS")
-                        .font(.caption2.weight(.bold).monospaced())
+                        .font(.caption2.weight(.heavy))
                         .tracking(0.6)
                         .foregroundStyle(DesignTokens.textTertiary)
                 } icon: {
                     Image(systemName: "map.fill")
-                        .font(.caption)
+                        .font(.caption2)
                         .foregroundStyle(DesignTokens.accent)
                 }
 
                 Spacer()
 
                 Text("400 FT AGL RADIUS")
-                    .font(.caption2.weight(.bold).monospaced())
+                    .font(.caption2.weight(.bold))
                     .foregroundStyle(DesignTokens.accent)
                     .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
+                    .padding(.vertical, 3)
                     .background(
                         Capsule().fill(DesignTokens.accentMuted)
                     )
@@ -80,7 +82,7 @@ public struct FlightMapView: View {
                     }
                 }
                 .mapStyle(.hybrid(elevation: .realistic))
-                .frame(height: 190)
+                .frame(height: 180)
                 .clipShape(RoundedRectangle(cornerRadius: DesignTokens.radiusInner, style: .continuous))
                 .overlay(
                     RoundedRectangle(cornerRadius: DesignTokens.radiusInner, style: .continuous)
@@ -96,7 +98,7 @@ public struct FlightMapView: View {
                     Image(systemName: "location.fill")
                         .font(.footnote.weight(.bold))
                         .foregroundStyle(DesignTokens.textPrimary)
-                        .frame(width: 44, height: 44)
+                        .frame(width: 40, height: 40)
                         .background(
                             Circle()
                                 .fill(.ultraThinMaterial)
@@ -106,22 +108,20 @@ public struct FlightMapView: View {
                         )
                 }
                 .buttonStyle(.interactivePress)
-                .padding(DesignTokens.space12)
+                .padding(DesignTokens.space10)
             }
             .onChange(of: coordinate?.latitude) { _, _ in
                 withAnimation(.snappy(duration: 0.3)) {
                     position = .camera(MapCamera(centerCoordinate: activeCoordinate, distance: 1200))
                 }
             }
+
+            // 0.5px Hairline Separator
+            Rectangle()
+                .fill(DesignTokens.borderHairline)
+                .frame(height: 0.5)
+                .padding(.top, DesignTokens.space4)
         }
-        .padding(DesignTokens.space16)
-        .background(
-            RoundedRectangle(cornerRadius: DesignTokens.radiusCard, style: .continuous)
-                .fill(DesignTokens.surfaceSecondary)
-                .overlay(
-                    RoundedRectangle(cornerRadius: DesignTokens.radiusCard, style: .continuous)
-                        .stroke(DesignTokens.borderHairline.opacity(0.8), lineWidth: 0.5)
-                )
-        )
+        .padding(.vertical, DesignTokens.space8)
     }
 }
