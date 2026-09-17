@@ -7,37 +7,38 @@
 
 import SwiftUI
 
-/// Semantic design tokens adhering to strict Apple Human Interface Guidelines:
-/// 1. Typography via iOS semantic text styles (Large Title, Title, Headline, Body, Footnote, Caption).
-/// 2. Color defined by role (surfaces, borders, text, single interactive accent).
-/// 3. Strict single depth policy: Flat surfaces with precise 1pt/0.5pt hairline borders.
-/// 4. 4pt/8pt mathematical rhythm and 44x44pt minimum tap targets.
-/// 5. Native micro-interactions and tactile feedback.
+/// AAA Aviation Tactical Design System inspired by ForeFlight, DJI Fly, and Apple HIG:
+/// - True OLED pure black canvas (#000000) for cockpit and night-flight visibility.
+/// - Apple secondary system surfaces (#1C1C1E) and tertiary cell backgrounds (#2C2C2E).
+/// - High-contrast functional aviation signal colors (System Green #34C759, Aviation Amber #FF9500, Alert Red #FF3B30).
+/// - Tactical precision accent (#0A84FF).
+/// - 0.5pt subtle hairline borders matching native Apple separators (#38383A).
 public enum DesignTokens {
-    // MARK: - Color by Role
-    public static let surfacePrimary = Color(hex: "090D12")           // Root background
-    public static let surfaceSecondary = Color(hex: "121820")         // Card container
-    public static let surfaceTertiary = Color(hex: "18212B")          // Inset cell / sub-container
-    public static let borderHairline = Color(hex: "222C38")           // Precise separator border
+    // MARK: - OLED Cockpit Neutral Palette
+    public static let surfacePrimary = Color(hex: "000000")           // True OLED Black
+    public static let surfaceSecondary = Color(hex: "1C1C1E")         // Apple Dark Mode Card Surface
+    public static let surfaceTertiary = Color(hex: "2C2C2E")          // Inset Cell / Telemetry Block
+    public static let surfaceElevated = Color(hex: "3A3A3C")          // Interactive Pill / Secondary Hover
+    public static let borderHairline = Color(hex: "38383A")           // 0.5pt Native Separator Line
 
-    // Single cohesive interactive accent (aviation cobalt)
-    public static let accent = Color(hex: "0284C7")
-    public static let accentMuted = Color(hex: "0284C7").opacity(0.14)
+    // MARK: - Tactical Functional Colors (Strictly for flight data status)
+    public static let statusSafe = Color(hex: "34C759")               // Aviation Signal Green
+    public static let statusSafeMuted = Color(hex: "34C759").opacity(0.14)
+    public static let statusCaution = Color(hex: "FF9500")            // Intentional Warning Amber
+    public static let statusCautionMuted = Color(hex: "FF9500").opacity(0.14)
+    public static let statusAlert = Color(hex: "FF3B30")              // Regulatory Prohibited Crimson
+    public static let statusAlertMuted = Color(hex: "FF3B30").opacity(0.14)
 
-    // Semantic text hierarchy
+    // MARK: - Precision Brand Accent
+    public static let accent = Color(hex: "0A84FF")                   // Tactical Precision Blue
+    public static let accentMuted = Color(hex: "0A84FF").opacity(0.16)
+
+    // MARK: - Typography Roles
     public static let textPrimary = Color.white
-    public static let textSecondary = Color(hex: "94A3B8")
-    public static let textTertiary = Color(hex: "64748B")
+    public static let textSecondary = Color(hex: "8E8E93")           // Apple system secondaryLabel
+    public static let textTertiary = Color(hex: "636366")            // Apple system tertiaryLabel
 
-    // Telemetry Status (Reserved strictly for regulatory data alerts, NOT brand accents)
-    public static let statusSafe = Color(hex: "16A34A")
-    public static let statusSafeMuted = Color(hex: "16A34A").opacity(0.12)
-    public static let statusCaution = Color(hex: "D97706")
-    public static let statusCautionMuted = Color(hex: "D97706").opacity(0.12)
-    public static let statusAlert = Color(hex: "DC2626")
-    public static let statusAlertMuted = Color(hex: "DC2626").opacity(0.12)
-
-    // Legacy mapping aliases to preserve safety
+    // Legacy Aliases for backwards compatibility
     public static let canvasBackground = surfacePrimary
     public static let cardBackground = surfaceSecondary
     public static let cardBackgroundSecondary = surfaceTertiary
@@ -49,7 +50,7 @@ public enum DesignTokens {
     public static let skyBlue = accent
     public static let textMuted = textTertiary
 
-    // MARK: - Spacing & Rhythm (Strict 4pt / 8pt Grid)
+    // MARK: - Layout Rhythm (8pt Mathematical Grid)
     public static let space4: CGFloat = 4.0
     public static let space8: CGFloat = 8.0
     public static let space12: CGFloat = 12.0
@@ -58,7 +59,6 @@ public enum DesignTokens {
     public static let space24: CGFloat = 24.0
     public static let space32: CGFloat = 32.0
 
-    // Legacy aliases
     public static let spaceXS = space4
     public static let spaceS = space8
     public static let spaceM = space16
@@ -66,26 +66,26 @@ public enum DesignTokens {
     public static let spaceXL = space32
     public static let spaceXXL: CGFloat = 48.0
 
-    // MARK: - Consistent Corner Radii (Continuous curves)
-    public static let radiusInner: CGFloat = 8.0
-    public static let radiusCard: CGFloat = 12.0
+    // MARK: - Curvatures
+    public static let radiusInner: CGFloat = 10.0
+    public static let radiusCard: CGFloat = 16.0
     public static let radiusPill: CGFloat = 999.0
 
     public static let radiusS = radiusInner
     public static let radiusM = radiusCard
-    public static let radiusL: CGFloat = 16.0
+    public static let radiusL: CGFloat = 20.0
 }
 
-// MARK: - Micro-Interaction Button Style
+// MARK: - Tactile Micro-Interaction Button Style
 
 public struct InteractivePressButtonStyle: ButtonStyle {
     public init() {}
 
     public func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .scaleEffect(configuration.isPressed ? 0.98 : 1.0)
-            .opacity(configuration.isPressed ? 0.88 : 1.0)
-            .animation(.easeOut(duration: 0.15), value: configuration.isPressed)
+            .scaleEffect(configuration.isPressed ? 0.975 : 1.0)
+            .opacity(configuration.isPressed ? 0.85 : 1.0)
+            .animation(.snappy(duration: 0.15, extraBounce: 0), value: configuration.isPressed)
     }
 }
 
@@ -95,7 +95,7 @@ extension ButtonStyle where Self == InteractivePressButtonStyle {
     }
 }
 
-// MARK: - Color Hex Initializer
+// MARK: - Color Hex Parser
 
 extension Color {
     public init(hex: String) {

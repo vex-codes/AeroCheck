@@ -8,11 +8,10 @@
 import SwiftUI
 import MapKit
 
-/// Tactical airspace Map view conforming to human-designed Apple HIG:
-/// - Semantic typography (Subheadline, Caption)
-/// - Flat container with crisp 1pt hairline border (zero floating drop shadows)
-/// - 44x44pt accessible interactive recenter target
-/// - Native Apple MapKit standard styling
+/// Tactical airspace Map view adhering to ForeFlight/DJI Fly aesthetic:
+/// - Seamless embedded map matching the 16pt card curvature.
+/// - Floating location button with native ultraThinMaterial vibrancy and circular stroke.
+/// - Crisp tactical Part 107 operational radius overlay.
 public struct FlightMapView: View {
     public let coordinate: CLLocationCoordinate2D?
     public let airspace: AirspaceEvaluation?
@@ -33,8 +32,9 @@ public struct FlightMapView: View {
             // Header Row
             HStack {
                 Label {
-                    Text("TACTICAL AIRSPACE MAP")
-                        .font(.caption.weight(.bold).monospaced())
+                    Text("TACTICAL MAP & BUFFER RADIUS")
+                        .font(.caption2.weight(.bold).monospaced())
+                        .tracking(0.6)
                         .foregroundStyle(DesignTokens.textTertiary)
                 } icon: {
                     Image(systemName: "map.fill")
@@ -44,24 +44,22 @@ public struct FlightMapView: View {
 
                 Spacer()
 
-                if let ident = airspace?.airportIdent {
-                    Text(ident)
-                        .font(.caption2.weight(.bold).monospaced())
-                        .foregroundStyle(DesignTokens.accent)
-                        .padding(.horizontal, DesignTokens.space8)
-                        .padding(.vertical, DesignTokens.space4)
-                        .background(
-                            Capsule().fill(DesignTokens.accentMuted)
-                        )
-                }
+                Text("400 FT AGL RADIUS")
+                    .font(.caption2.weight(.bold).monospaced())
+                    .foregroundStyle(DesignTokens.accent)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(
+                        Capsule().fill(DesignTokens.accentMuted)
+                    )
             }
 
-            // Tactical Map Container
+            // Embedded Tactical Map
             ZStack(alignment: .bottomTrailing) {
                 Map(position: $position) {
                     // Part 107 legal 400 ft (~122m) buffer radius
                     MapCircle(center: activeCoordinate, radius: 122)
-                        .foregroundStyle(DesignTokens.accent.opacity(0.12))
+                        .foregroundStyle(DesignTokens.accent.opacity(0.14))
                         .stroke(DesignTokens.accent, lineWidth: 1.5)
 
                     // Drone Pin Annotation
@@ -71,45 +69,44 @@ public struct FlightMapView: View {
                                 .fill(DesignTokens.surfacePrimary)
                                 .frame(width: 32, height: 32)
                                 .overlay(
-                                    Circle().stroke(DesignTokens.accent, lineWidth: 1.5)
+                                    Circle().stroke(DesignTokens.accent, lineWidth: 2)
                                 )
 
                             Image(systemName: "airplane")
-                                .font(.caption.weight(.bold))
+                                .font(.caption.weight(.heavy))
                                 .foregroundStyle(DesignTokens.accent)
                                 .rotationEffect(.degrees(-45))
                         }
                     }
                 }
                 .mapStyle(.hybrid(elevation: .realistic))
-                .frame(height: 180)
+                .frame(height: 190)
                 .clipShape(RoundedRectangle(cornerRadius: DesignTokens.radiusInner, style: .continuous))
                 .overlay(
                     RoundedRectangle(cornerRadius: DesignTokens.radiusInner, style: .continuous)
-                        .stroke(DesignTokens.borderHairline, lineWidth: 1)
+                        .stroke(DesignTokens.borderHairline.opacity(0.8), lineWidth: 0.5)
                 )
 
-                // Recenter Button with 44x44pt tap target & micro-interaction
+                // Floating Recenter Button with ultraThinMaterial blur vibrancy
                 Button {
                     withAnimation(.snappy(duration: 0.3)) {
                         position = .camera(MapCamera(centerCoordinate: activeCoordinate, distance: 1200))
                     }
                 } label: {
                     Image(systemName: "location.fill")
-                        .font(.footnote.weight(.semibold))
+                        .font(.footnote.weight(.bold))
                         .foregroundStyle(DesignTokens.textPrimary)
                         .frame(width: 44, height: 44)
                         .background(
-                            RoundedRectangle(cornerRadius: DesignTokens.radiusInner, style: .continuous)
-                                .fill(DesignTokens.surfaceSecondary)
+                            Circle()
+                                .fill(.ultraThinMaterial)
                                 .overlay(
-                                    RoundedRectangle(cornerRadius: DesignTokens.radiusInner, style: .continuous)
-                                        .stroke(DesignTokens.borderHairline, lineWidth: 1)
+                                    Circle().stroke(Color.white.opacity(0.2), lineWidth: 0.5)
                                 )
                         )
                 }
                 .buttonStyle(.interactivePress)
-                .padding(DesignTokens.space8)
+                .padding(DesignTokens.space12)
             }
             .onChange(of: coordinate?.latitude) { _, _ in
                 withAnimation(.snappy(duration: 0.3)) {
@@ -123,7 +120,7 @@ public struct FlightMapView: View {
                 .fill(DesignTokens.surfaceSecondary)
                 .overlay(
                     RoundedRectangle(cornerRadius: DesignTokens.radiusCard, style: .continuous)
-                        .stroke(DesignTokens.borderHairline, lineWidth: 1)
+                        .stroke(DesignTokens.borderHairline.opacity(0.8), lineWidth: 0.5)
                 )
         )
     }

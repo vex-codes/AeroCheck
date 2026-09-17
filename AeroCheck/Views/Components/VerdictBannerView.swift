@@ -7,11 +7,11 @@
 
 import SwiftUI
 
-/// Primary Go / Caution / No-Go verdict banner adhering to Apple Human Interface Guidelines:
-/// - Semantic typography (Title, Headline, Subheadline, Footnote)
-/// - Restrained status color accents with calm surfaces
-/// - Flat surface with precise hairline borders
-/// - Strict 8pt spatial rhythm and minimum 44x44pt tap target
+/// AAA Master Verdict Banner:
+/// - Heavy typography with refined letter tracking.
+/// - Crisp functional status colors (Green / Amber / Crimson) against OLED card backdrop.
+/// - Sleek 0.5pt subtle separator border with 16pt uniform internal padding.
+/// - Clean legal citations with distinct secondaryLabel styling and comfortable line heights.
 public struct VerdictBannerView: View {
     public let result: RiskAssessmentResult?
     public let isLoading: Bool
@@ -32,7 +32,7 @@ public struct VerdictBannerView: View {
         }
     }
 
-    private var statusBadgeMuted: Color {
+    private var statusBadgeBackground: Color {
         guard let res = result else { return DesignTokens.accentMuted }
         switch res.overallVerdict {
         case .safe: return DesignTokens.statusSafeMuted
@@ -41,25 +41,29 @@ public struct VerdictBannerView: View {
         }
     }
 
+    private var statusIcon: String {
+        guard let res = result else { return "antenna.radiowaves.left.and.right" }
+        return res.overallVerdict.systemIcon
+    }
+
     public var body: some View {
         VStack(alignment: .leading, spacing: DesignTokens.space12) {
-            // Header Bar
-            HStack(alignment: .center, spacing: DesignTokens.space12) {
-                // Status Indicator Pill
-                HStack(spacing: DesignTokens.space8) {
+            // Tactical Status Pill & Expand Trigger
+            HStack(alignment: .center, spacing: DesignTokens.space8) {
+                HStack(spacing: 6) {
                     Circle()
                         .fill(statusColor)
-                        .frame(width: 8, height: 8)
+                        .frame(width: 7, height: 7)
 
-                    Text(isLoading ? "EVALUATING" : (result?.overallVerdict.rawValue ?? "STANDBY"))
-                        .font(.caption.weight(.bold).monospaced())
+                    Text(isLoading ? "EVALUATING" : (result?.overallVerdict.rawValue ?? "READY"))
+                        .font(.caption2.weight(.heavy).monospaced())
+                        .tracking(0.8)
                         .foregroundStyle(statusColor)
                 }
-                .padding(.horizontal, DesignTokens.space8)
-                .padding(.vertical, DesignTokens.space4)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 5)
                 .background(
-                    Capsule()
-                        .fill(statusBadgeMuted)
+                    Capsule().fill(statusBadgeBackground)
                 )
 
                 Spacer()
@@ -70,13 +74,13 @@ public struct VerdictBannerView: View {
                             isExpanded.toggle()
                         }
                     } label: {
-                        HStack(spacing: DesignTokens.space4) {
-                            Text(isExpanded ? "Hide Details" : "View Factors (\(factors.count))")
-                                .font(.footnote.weight(.medium))
+                        HStack(spacing: 4) {
+                            Text(isExpanded ? "Hide Telemetry" : "Telemetry Factors (\(factors.count))")
+                                .font(.caption.weight(.medium))
                             Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
-                                .font(.caption.weight(.semibold))
+                                .font(.caption2.weight(.bold))
                         }
-                        .foregroundStyle(DesignTokens.accent)
+                        .foregroundStyle(DesignTokens.textSecondary)
                         .frame(minHeight: 44)
                         .contentShape(Rectangle())
                     }
@@ -84,39 +88,42 @@ public struct VerdictBannerView: View {
                 }
             }
 
-            // Headline
-            Text(isLoading ? "Analyzing Airspace & Atmospheric Soundings" : (result?.primaryHeadline ?? "Awaiting Telemetry"))
-                .font(.title3.weight(.bold))
+            // Primary Alert Headline
+            Text(isLoading ? "Synchronizing FAA & NOAA Telemetry" : (result?.primaryHeadline ?? "Awaiting Telemetry"))
+                .font(.title2.weight(.heavy))
+                .tracking(-0.3)
                 .foregroundStyle(DesignTokens.textPrimary)
+                .fixedSize(horizontal: false, vertical: true)
 
             // Rationale Copy
             if let rationale = result?.detailedRationale {
                 Text(rationale)
                     .font(.subheadline)
                     .foregroundStyle(DesignTokens.textSecondary)
-                    .lineSpacing(2)
+                    .lineSpacing(3)
             }
 
-            // Expandable Regulatory RAM Factor Breakdown
+            // Expandable RAM Compliance Breakdown
             if isExpanded, let factors = result?.factors {
-                VStack(alignment: .leading, spacing: DesignTokens.space8) {
+                VStack(alignment: .leading, spacing: DesignTokens.space12) {
                     Divider()
-                        .background(DesignTokens.borderHairline)
-                        .padding(.vertical, DesignTokens.space4)
+                        .overlay(DesignTokens.borderHairline)
+                        .padding(.top, DesignTokens.space4)
 
-                    Text("RISK ASSESSMENT MATRIX BREAKDOWN")
-                        .font(.caption2.weight(.semibold).monospaced())
+                    Text("REGULATORY COMPLIANCE FACTORS")
+                        .font(.caption2.weight(.bold).monospaced())
+                        .tracking(0.6)
                         .foregroundStyle(DesignTokens.textTertiary)
 
                     ForEach(factors) { factor in
-                        HStack(alignment: .top, spacing: DesignTokens.space8) {
+                        HStack(alignment: .top, spacing: DesignTokens.space12) {
                             Circle()
                                 .fill(colorForVerdict(factor.severity))
                                 .frame(width: 6, height: 6)
                                 .padding(.top, 6)
 
                             VStack(alignment: .leading, spacing: 2) {
-                                HStack {
+                                HStack(alignment: .firstTextBaseline) {
                                     Text(factor.category.rawValue)
                                         .font(.subheadline.weight(.semibold))
                                         .foregroundStyle(DesignTokens.textPrimary)
@@ -124,17 +131,17 @@ public struct VerdictBannerView: View {
                                     Spacer()
 
                                     Text(factor.regulatoryReference)
-                                        .font(.caption.weight(.medium).monospaced())
+                                        .font(.caption2.weight(.medium).monospaced())
                                         .foregroundStyle(DesignTokens.textTertiary)
                                 }
 
                                 Text(factor.summary)
                                     .font(.footnote)
                                     .foregroundStyle(DesignTokens.textSecondary)
+                                    .lineSpacing(2)
                                     .fixedSize(horizontal: false, vertical: true)
                             }
                         }
-                        .padding(.vertical, 2)
                     }
                 }
                 .transition(.opacity.combined(with: .move(edge: .top)))
@@ -146,7 +153,7 @@ public struct VerdictBannerView: View {
                 .fill(DesignTokens.surfaceSecondary)
                 .overlay(
                     RoundedRectangle(cornerRadius: DesignTokens.radiusCard, style: .continuous)
-                        .stroke(DesignTokens.borderHairline, lineWidth: 1)
+                        .stroke(DesignTokens.borderHairline.opacity(0.8), lineWidth: 0.5)
                 )
         )
     }

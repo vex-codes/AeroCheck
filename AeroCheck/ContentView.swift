@@ -8,29 +8,30 @@
 import SwiftUI
 import CoreLocation
 
-/// 10x Native iOS Flight Dashboard adhering strictly to Apple HIG:
-/// - Zero toolbar clutter: Native pull-to-refresh replaces manual refresh buttons.
-/// - Inline native iOS Menu for drone fleet switching (no redundant full-screen modals).
-/// - Pure 44x44pt minimum tap targets with subtle tactile press feedback.
-/// - Flat surfaces with 1pt hairline borders (zero artificial drop shadows or floating gradients).
+/// AAA Tactical Flight Dashboard adhering to ForeFlight, DJI Fly, and Apple HIG:
+/// - Pure OLED Black canvas (#000000) with Apple secondarySystemBackground cards (#1C1C1E).
+/// - 0.5pt subtle hairline borders matching native Apple separators.
+/// - Floating tactile action capsule anchored at bottom with haptic feedback and safe-area clearance.
+/// - Native inline drone fleet switcher menu.
 struct ContentView: View {
     @State private var viewModel = FlightDashboardViewModel()
 
     var body: some View {
         NavigationStack {
             ZStack(alignment: .bottom) {
+                // Scrollable Telemetry Surface
                 ScrollView {
                     VStack(spacing: DesignTokens.space16) {
-                        // Top Context Bar: Location & Drone Fleet Quick Menu
+                        // Tactical Flight Context Bar (GPS Location + Fleet Menu)
                         flightContextBar
 
-                        // 1. Master Verdict Hero
+                        // 1. Master Verdict Hero Banner
                         VerdictBannerView(
                             result: viewModel.riskResult,
                             isLoading: viewModel.isLoading
                         )
 
-                        // 2. Airspace Authorization & LAANC Direct Action
+                        // 2. Tactical Airspace & LAANC Authorization
                         AirspaceCardView(
                             airspace: viewModel.airspace,
                             onOpenLAANC: {
@@ -38,7 +39,7 @@ struct ContentView: View {
                             }
                         )
 
-                        // 3. Tactical Map
+                        // 3. Seamless Tactical Map
                         FlightMapView(
                             coordinate: viewModel.locationManager.coordinate,
                             airspace: viewModel.airspace
@@ -52,8 +53,8 @@ struct ContentView: View {
                             thrustLossPercent: viewModel.riskResult?.thrustEfficiencyLossPercent
                         )
 
-                        // Spacing for persistent bottom CTA
-                        Color.clear.frame(height: 64)
+                        // Clear padding so scroll view content clears the floating action capsule
+                        Color.clear.frame(height: 76)
                     }
                     .padding(.horizontal, DesignTokens.space16)
                     .padding(.top, DesignTokens.space8)
@@ -62,8 +63,8 @@ struct ContentView: View {
                     await viewModel.refreshData()
                 }
 
-                // Persistent Bottom Action Bar
-                bottomActionBar
+                // Floating Tactical Action Capsule (Bottom Anchor)
+                floatingActionAnchor
             }
             .background(DesignTokens.surfacePrimary.ignoresSafeArea())
             .navigationBarTitleDisplayMode(.inline)
@@ -75,7 +76,8 @@ struct ContentView: View {
                             .foregroundStyle(DesignTokens.accent)
 
                         Text("AeroCheck")
-                            .font(.headline.weight(.bold))
+                            .font(.headline.weight(.heavy))
+                            .tracking(-0.3)
                             .foregroundStyle(DesignTokens.textPrimary)
                     }
                 }
@@ -87,7 +89,7 @@ struct ContentView: View {
                     }
                 }
             }
-            // Dedicated sheets
+            // Sheets
             .sheet(isPresented: $viewModel.showChecklistSheet) {
                 PreFlightChecklistView(
                     record: $viewModel.signOffRecord,
@@ -152,12 +154,12 @@ struct ContentView: View {
                         .foregroundStyle(DesignTokens.accent)
 
                     Text(viewModel.locationManager.placemarkName)
-                        .font(.subheadline.weight(.medium))
+                        .font(.subheadline.weight(.semibold))
                         .foregroundStyle(DesignTokens.textPrimary)
                         .lineLimit(1)
 
                     Image(systemName: "chevron.down")
-                        .font(.caption2)
+                        .font(.caption2.weight(.bold))
                         .foregroundStyle(DesignTokens.textTertiary)
                 }
                 .padding(.horizontal, DesignTokens.space12)
@@ -167,7 +169,7 @@ struct ContentView: View {
                         .fill(DesignTokens.surfaceSecondary)
                         .overlay(
                             RoundedRectangle(cornerRadius: DesignTokens.radiusInner, style: .continuous)
-                                .stroke(DesignTokens.borderHairline, lineWidth: 1)
+                                .stroke(DesignTokens.borderHairline.opacity(0.8), lineWidth: 0.5)
                         )
                 )
                 .contentShape(Rectangle())
@@ -176,7 +178,7 @@ struct ContentView: View {
 
             Spacer()
 
-            // Native iOS Drone Selection Menu
+            // Native Drone Fleet Menu
             Menu {
                 Section("Active Airframe") {
                     ForEach(viewModel.droneProfiles) { profile in
@@ -203,7 +205,7 @@ struct ContentView: View {
             } label: {
                 HStack(spacing: DesignTokens.space4) {
                     Image(systemName: "airplane")
-                        .font(.caption.weight(.semibold))
+                        .font(.caption.weight(.bold))
                         .foregroundStyle(DesignTokens.accent)
 
                     Text(viewModel.selectedDrone.name)
@@ -212,7 +214,7 @@ struct ContentView: View {
                         .lineLimit(1)
 
                     Image(systemName: "chevron.up.chevron.down")
-                        .font(.caption2)
+                        .font(.caption2.weight(.bold))
                         .foregroundStyle(DesignTokens.textTertiary)
                 }
                 .padding(.horizontal, DesignTokens.space12)
@@ -222,7 +224,7 @@ struct ContentView: View {
                         .fill(DesignTokens.surfaceSecondary)
                         .overlay(
                             RoundedRectangle(cornerRadius: DesignTokens.radiusInner, style: .continuous)
-                                .stroke(DesignTokens.borderHairline, lineWidth: 1)
+                                .stroke(DesignTokens.borderHairline.opacity(0.8), lineWidth: 0.5)
                         )
                 )
                 .contentShape(Rectangle())
@@ -231,35 +233,52 @@ struct ContentView: View {
         }
     }
 
-    private var bottomActionBar: some View {
+    /// Premium Floating Bottom Action Capsule
+    private var floatingActionAnchor: some View {
         VStack(spacing: 0) {
-            Divider()
-                .background(DesignTokens.borderHairline)
+            Button {
+                viewModel.showChecklistSheet = true
+            } label: {
+                HStack(spacing: DesignTokens.space12) {
+                    Image(systemName: "checklist.checked")
+                        .font(.subheadline.weight(.heavy))
 
-            HStack(spacing: DesignTokens.space16) {
-                Button {
-                    viewModel.showChecklistSheet = true
-                } label: {
-                    HStack(spacing: DesignTokens.space8) {
-                        Image(systemName: "checklist.checked")
-                            .font(.subheadline.weight(.semibold))
-                        Text("Pre-Flight Verification & Sign-Off")
-                            .font(.headline)
-                    }
-                    .foregroundStyle(.white)
-                    .frame(maxWidth: .infinity)
-                    .frame(minHeight: 48)
-                    .background(
-                        RoundedRectangle(cornerRadius: DesignTokens.radiusInner, style: .continuous)
-                            .fill(DesignTokens.accent)
-                    )
+                    Text("Pre-Flight Verification & Sign-Off")
+                        .font(.subheadline.weight(.bold))
+                        .tracking(-0.2)
+
+                    Image(systemName: "arrow.right")
+                        .font(.caption.weight(.bold))
                 }
-                .buttonStyle(.interactivePress)
+                .foregroundStyle(.white)
+                .padding(.horizontal, 22)
+                .frame(height: 52)
+                .frame(maxWidth: .infinity)
+                .background(
+                    Capsule(style: .continuous)
+                        .fill(DesignTokens.accent)
+                        .overlay(
+                            Capsule(style: .continuous)
+                                .stroke(Color.white.opacity(0.18), lineWidth: 0.5)
+                        )
+                )
             }
+            .buttonStyle(.interactivePress)
             .padding(.horizontal, DesignTokens.space16)
-            .padding(.vertical, DesignTokens.space12)
-            .background(DesignTokens.surfacePrimary)
+            .padding(.bottom, DesignTokens.space8)
         }
+        .background(
+            LinearGradient(
+                colors: [
+                    DesignTokens.surfacePrimary.opacity(0.0),
+                    DesignTokens.surfacePrimary.opacity(0.85),
+                    DesignTokens.surfacePrimary
+                ],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+            .ignoresSafeArea(edges: .bottom)
+        )
     }
 }
 
