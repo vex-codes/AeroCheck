@@ -14,9 +14,18 @@ public struct PDFPreviewSheet: View {
     @Environment(\.dismiss) private var dismiss
 
     public let pdfData: Data?
+    public let generatedDate: Date
 
-    public init(pdfData: Data?) {
+    public init(pdfData: Data?, generatedDate: Date = Date()) {
         self.pdfData = pdfData
+        self.generatedDate = generatedDate
+    }
+
+    private var timestampedFilename: String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd_HHmm"
+        let dateStr = formatter.string(from: generatedDate)
+        return "AeroCheck_RAM_Audit_\(dateStr).pdf"
     }
 
     public var body: some View {
@@ -26,10 +35,10 @@ public struct PDFPreviewSheet: View {
                     PDFKitRepresentedView(document: document)
                         .ignoresSafeArea(edges: .bottom)
                 } else {
-                    VStack(spacing: DesignTokens.spaceM) {
+                    VStack(spacing: DesignTokens.space16) {
                         Image(systemName: "exclamationmark.triangle")
                             .font(.system(size: 32))
-                            .foregroundStyle(DesignTokens.verdictCaution)
+                            .foregroundStyle(DesignTokens.statusCaution)
                         Text("Unable to render PDF document.")
                             .font(.system(size: 15, weight: .semibold))
                             .foregroundStyle(DesignTokens.textSecondary)
@@ -37,26 +46,26 @@ public struct PDFPreviewSheet: View {
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                 }
             }
-            .background(DesignTokens.canvasBackground)
-            .navigationTitle("FAA Part 107 Audit PDF")
+            .background(DesignTokens.surfacePrimary)
+            .navigationTitle("Part 107 Audit PDF")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     Button("Done") {
                         dismiss()
                     }
-                    .foregroundStyle(DesignTokens.aeroBlue)
+                    .foregroundStyle(DesignTokens.accent)
                 }
 
                 ToolbarItem(placement: .topBarTrailing) {
                     if let data = pdfData {
                         ShareLink(
-                            item: PDFShareItem(pdfData: data, filename: "AeroCheck_Part107_RAM.pdf"),
-                            preview: SharePreview("AeroCheck Part 107 Compliance Audit", image: Image(systemName: "doc.text.fill"))
+                            item: PDFShareItem(pdfData: data, filename: timestampedFilename),
+                            preview: SharePreview(timestampedFilename, image: Image(systemName: "doc.text.fill"))
                         ) {
                             Image(systemName: "square.and.arrow.up")
                                 .font(.system(size: 16, weight: .bold))
-                                .foregroundStyle(DesignTokens.aeroBlue)
+                                .foregroundStyle(DesignTokens.accent)
                         }
                     }
                 }

@@ -159,7 +159,10 @@ struct ContentView: View {
                 )
             }
             .sheet(isPresented: $viewModel.showPDFShareSheet) {
-                PDFPreviewSheet(pdfData: viewModel.generatedPDFData)
+                PDFPreviewSheet(
+                    pdfData: viewModel.generatedPDFData,
+                    generatedDate: viewModel.pdfGeneratedDate
+                )
             }
             .sheet(isPresented: $viewModel.showDronePickerSheet) {
                 DroneProfilePickerView(

@@ -48,6 +48,7 @@ public final class FlightDashboardViewModel: @unchecked Sendable {
     // Pre-Flight Sign-off & Modals
     public var signOffRecord: PreFlightSignOffRecord = PreFlightSignOffRecord()
     public var generatedPDFData: Data?
+    public var pdfGeneratedDate: Date = Date()
     public var showChecklistSheet: Bool = false
     public var showPDFShareSheet: Bool = false
     public var showDronePickerSheet: Bool = false
@@ -218,6 +219,9 @@ public final class FlightDashboardViewModel: @unchecked Sendable {
             return
         }
 
+        let now = Date()
+        self.pdfGeneratedDate = now
+
         let pdf = PDFReportGenerator.generateComplianceReport(
             airspace: air,
             weather: w,
@@ -225,7 +229,8 @@ public final class FlightDashboardViewModel: @unchecked Sendable {
             risk: r,
             signOff: signOffRecord,
             locationCoordinate: coord,
-            locationAddress: locationManager.placemarkName
+            locationAddress: locationManager.placemarkName,
+            plannedAltitudeFeet: plannedAltitudeFeet
         )
 
         self.generatedPDFData = pdf
