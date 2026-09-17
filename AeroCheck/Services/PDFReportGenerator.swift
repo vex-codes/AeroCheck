@@ -108,20 +108,20 @@ public enum PDFReportGenerator {
             drawSectionHeader("PILOT & MISSION IDENTIFICATION", in: leftBoxRect, context: cgContext)
 
             var pilotY = currentY + 18
-            drawKeyValue(label: "Remote Pilot:", value: signOff.pilotName.isEmpty ? "Self-Certified Operator" : signOff.pilotName, labelWidth: 70, in: leftBoxRect, y: pilotY, boldAttrs: boldAttrs, valAttrs: valAttrs)
+            drawField(label: "Remote Pilot: ", value: signOff.pilotName.isEmpty ? "Self-Certified Operator" : signOff.pilotName, in: CGRect(x: margin + 8, y: pilotY, width: colWidth - 16, height: 12), boldAttrs: boldAttrs, valAttrs: valAttrs)
 
             pilotY += 12
-            drawKeyValue(label: "Certificate #:", value: signOff.remotePilotCertificateNumber.isEmpty ? "PENDING ENTRY" : signOff.remotePilotCertificateNumber, labelWidth: 70, in: leftBoxRect, y: pilotY, boldAttrs: boldAttrs, valAttrs: valAttrs)
+            drawField(label: "Certificate #: ", value: signOff.remotePilotCertificateNumber.isEmpty ? "PENDING ENTRY" : signOff.remotePilotCertificateNumber, in: CGRect(x: margin + 8, y: pilotY, width: colWidth - 16, height: 12), boldAttrs: boldAttrs, valAttrs: valAttrs)
 
             pilotY += 12
             let locShort = String(locationAddress.prefix(22))
-            drawKeyValue(label: "Launch Site:", value: String(format: "%.4f, %.4f (%@)", locationCoordinate.latitude, locationCoordinate.longitude, locShort), labelWidth: 70, in: leftBoxRect, y: pilotY, boldAttrs: boldAttrs, valAttrs: valAttrs)
+            drawField(label: "Launch Site: ", value: String(format: "%.4f, %.4f (%@)", locationCoordinate.latitude, locationCoordinate.longitude, locShort), in: CGRect(x: margin + 8, y: pilotY, width: colWidth - 16, height: 12), boldAttrs: boldAttrs, valAttrs: valAttrs)
 
             pilotY += 12
-            drawKeyValue(label: "Mission Goal:", value: String(signOff.missionPurpose.prefix(28)), labelWidth: 70, in: leftBoxRect, y: pilotY, boldAttrs: boldAttrs, valAttrs: valAttrs)
+            drawField(label: "Mission Goal: ", value: String(signOff.missionPurpose.prefix(28)), in: CGRect(x: margin + 8, y: pilotY, width: colWidth - 16, height: 12), boldAttrs: boldAttrs, valAttrs: valAttrs)
 
             pilotY += 12
-            drawKeyValue(label: "Planned Alt:", value: "\(plannedAltitudeFeet) ft AGL (Operating Ceiling)", labelWidth: 70, in: leftBoxRect, y: pilotY, boldAttrs: boldAttrs, valAttrs: valAttrs)
+            drawField(label: "Planned Alt: ", value: "\(plannedAltitudeFeet) ft AGL (Operating Ceiling)", in: CGRect(x: margin + 8, y: pilotY, width: colWidth - 16, height: 12), boldAttrs: boldAttrs, valAttrs: valAttrs)
 
             // Right Col: Aircraft Specs
             let rightBoxRect = CGRect(x: margin + colWidth + colGap, y: currentY, width: colWidth, height: infoBoxHeight)
@@ -129,19 +129,19 @@ public enum PDFReportGenerator {
             drawSectionHeader("AIRCRAFT SPECIFICATION & LIMITS", in: rightBoxRect, context: cgContext)
 
             var droneY = currentY + 18
-            drawKeyValue(label: "Model / Setup:", value: drone.name, labelWidth: 75, in: rightBoxRect, y: droneY, boldAttrs: boldAttrs, valAttrs: valAttrs)
+            drawField(label: "Model / Setup: ", value: drone.name, in: CGRect(x: rightBoxRect.origin.x + 8, y: droneY, width: colWidth - 16, height: 12), boldAttrs: boldAttrs, valAttrs: valAttrs)
 
             droneY += 12
-            drawKeyValue(label: "Takeoff Weight:", value: String(format: "%.0fg (%@)", drone.weightGrams, drone.category), labelWidth: 75, in: rightBoxRect, y: droneY, boldAttrs: boldAttrs, valAttrs: valAttrs)
+            drawField(label: "Takeoff Weight: ", value: String(format: "%.0fg (%@)", drone.weightGrams, drone.category), in: CGRect(x: rightBoxRect.origin.x + 8, y: droneY, width: colWidth - 16, height: 12), boldAttrs: boldAttrs, valAttrs: valAttrs)
 
             droneY += 12
-            drawKeyValue(label: "Max Wind Limit:", value: String(format: "%.1f mph (%.1f kts)", drone.maxWindResistanceMph, AviationMath.mphToKnots(drone.maxWindResistanceMph)), labelWidth: 75, in: rightBoxRect, y: droneY, boldAttrs: boldAttrs, valAttrs: valAttrs)
+            drawField(label: "Max Wind Limit: ", value: String(format: "%.1f mph (%.1f kts)", drone.maxWindResistanceMph, AviationMath.mphToKnots(drone.maxWindResistanceMph)), in: CGRect(x: rightBoxRect.origin.x + 8, y: droneY, width: colWidth - 16, height: 12), boldAttrs: boldAttrs, valAttrs: valAttrs)
 
             droneY += 12
-            drawKeyValue(label: "Temp Range:", value: String(format: "%.0f°C to %.0f°C", drone.minOperatingTempC, drone.maxOperatingTempC), labelWidth: 75, in: rightBoxRect, y: droneY, boldAttrs: boldAttrs, valAttrs: valAttrs)
+            drawField(label: "Temp Range: ", value: String(format: "%.0f°C to %.0f°C", drone.minOperatingTempC, drone.maxOperatingTempC), in: CGRect(x: rightBoxRect.origin.x + 8, y: droneY, width: colWidth - 16, height: 12), boldAttrs: boldAttrs, valAttrs: valAttrs)
 
             droneY += 12
-            drawKeyValue(label: "Classification:", value: drone.weightGrams < 250 ? "FAA Sub-250g Category 1" : "FAA Standard Remote ID", labelWidth: 75, in: rightBoxRect, y: droneY, boldAttrs: boldAttrs, valAttrs: valAttrs)
+            drawField(label: "Classification: ", value: drone.weightGrams < 250 ? "FAA Sub-250g Category 1" : "FAA Standard Remote ID", in: CGRect(x: rightBoxRect.origin.x + 8, y: droneY, width: colWidth - 16, height: 12), boldAttrs: boldAttrs, valAttrs: valAttrs)
 
             currentY += infoBoxHeight + 8
 
@@ -156,30 +156,30 @@ public enum PDFReportGenerator {
 
             // Row 1: Airspace Class (Left) + UASFM Ceiling (Right)
             let airClassRect = CGRect(x: margin + 8, y: airY, width: halfWidth, height: 12)
-            drawInlineField(label: "Airspace Class: ", value: airspace.airspaceClass.title, in: airClassRect, boldAttrs: boldAttrs, valAttrs: valAttrs)
+            drawField(label: "Airspace Class: ", value: airspace.airspaceClass.title, in: airClassRect, boldAttrs: boldAttrs, valAttrs: valAttrs)
 
             let ceilingRect = CGRect(x: margin + 8 + halfWidth, y: airY, width: halfWidth, height: 12)
             let ceilingStr = airspace.uasfmCeilingFeet != nil ? "\(airspace.uasfmCeilingFeet!) ft AGL" : "400 ft AGL (Class G Surface)"
-            drawInlineField(label: "UASFM Ceiling: ", value: ceilingStr, in: ceilingRect, boldAttrs: boldAttrs, valAttrs: valAttrs)
+            drawField(label: "UASFM Ceiling: ", value: ceilingStr, in: ceilingRect, boldAttrs: boldAttrs, valAttrs: valAttrs)
 
             airY += 13
             // Row 2: LAANC Requirement
             let laancRect = CGRect(x: margin + 8, y: airY, width: contentWidth - 16, height: 12)
             let laancStr = airspace.requiresLAANC ? "MANDATORY AUTHORIZATION PRIOR TO OPERATION" : "NONE (Class G Uncontrolled Airspace up to 400 ft AGL)"
-            drawInlineField(label: "LAANC Requirement: ", value: laancStr, in: laancRect, boldAttrs: boldAttrs, valAttrs: valAttrs)
+            drawField(label: "LAANC Requirement: ", value: laancStr, in: laancRect, boldAttrs: boldAttrs, valAttrs: valAttrs)
 
             airY += 13
             // Row 3: ArcGIS / Regulatory Note
             let noteRect = CGRect(x: margin + 8, y: airY, width: contentWidth - 16, height: 14)
-            drawInlineField(label: "Regulatory Note: ", value: String(airspace.regulatoryNote.prefix(90)), in: noteRect, boldAttrs: boldAttrs, valAttrs: valAttrs)
+            drawField(label: "Regulatory Note: ", value: String(airspace.regulatoryNote.prefix(90)), in: noteRect, boldAttrs: boldAttrs, valAttrs: valAttrs)
 
             currentY += airspaceHeight + 8
 
             // 5. Environmental & Aviation Weather Section
-            let weatherHeight: CGFloat = 86
+            let weatherHeight: CGFloat = 98
             let weatherRect = CGRect(x: margin, y: currentY, width: contentWidth, height: weatherHeight)
             drawBorderedBox(context: cgContext, rect: weatherRect)
-            drawSectionHeader("ATMOSPHERIC SOUNDING & METAR WEATHER (§ 107.51)", in: weatherRect, context: cgContext)
+            drawSectionHeader("ATMOSPHERIC SOUNDING & METAR WEATHER (§ 107.51 / § 107.29)", in: weatherRect, context: cgContext)
 
             var wY = currentY + 18
 
@@ -195,25 +195,36 @@ public enum PDFReportGenerator {
             // Row 2: Surface Wind (Left) + Estimated Wind Aloft (Right)
             let gustStr = weather.surfaceWindGustMph != nil ? " G \(Int(weather.surfaceWindGustMph!)) mph" : ""
             let sWindStr = "\(Int(weather.surfaceWindSpeedMph)) mph\(gustStr) @ \(weather.windDirectionDegrees ?? 0)°"
-            drawInlineField(label: "Surface Wind: ", value: sWindStr, in: CGRect(x: margin + 8, y: wY, width: halfWidth, height: 12), boldAttrs: boldAttrs, valAttrs: valAttrs)
+            drawField(label: "Surface Wind: ", value: sWindStr, in: CGRect(x: margin + 8, y: wY, width: halfWidth, height: 12), boldAttrs: boldAttrs, valAttrs: valAttrs)
 
             let plannedWind = plannedAltitudeFeet <= 150 ? weather.wind100ftMph : (plannedAltitudeFeet <= 250 ? weather.wind200ftMph : weather.wind400ftMph)
-            drawInlineField(label: "\(plannedAltitudeFeet)ft Wind Aloft: ", value: String(format: "%.1f mph (Shear: %+.1f)", plannedWind, plannedWind - weather.surfaceWindSpeedMph), in: CGRect(x: margin + 8 + halfWidth, y: wY, width: halfWidth, height: 12), boldAttrs: boldAttrs, valAttrs: valAttrs)
+            drawField(label: "\(plannedAltitudeFeet)ft Wind Aloft: ", value: String(format: "%.1f mph (Shear: %+.1f)", plannedWind, plannedWind - weather.surfaceWindSpeedMph), in: CGRect(x: margin + 8 + halfWidth, y: wY, width: halfWidth, height: 12), boldAttrs: boldAttrs, valAttrs: valAttrs)
 
             wY += 13
             // Row 3: Visibility (Left) + Cloud Ceiling (Right)
-            drawInlineField(label: "Flight Visibility: ", value: "\(weather.visibilityStatuteMiles) SM (\(weather.flightCategory.rawValue))", in: CGRect(x: margin + 8, y: wY, width: halfWidth, height: 12), boldAttrs: boldAttrs, valAttrs: valAttrs)
+            drawField(label: "Flight Visibility: ", value: "\(weather.visibilityStatuteMiles) SM (\(weather.flightCategory.rawValue))", in: CGRect(x: margin + 8, y: wY, width: halfWidth, height: 12), boldAttrs: boldAttrs, valAttrs: valAttrs)
 
             let cloudStr = weather.cloudCeilingFeet != nil ? "\(weather.cloudCeilingFeet!) ft AGL" : "Unlimited / Clear"
-            drawInlineField(label: "Cloud Ceiling: ", value: cloudStr, in: CGRect(x: margin + 8 + halfWidth, y: wY, width: halfWidth, height: 12), boldAttrs: boldAttrs, valAttrs: valAttrs)
+            drawField(label: "Cloud Ceiling: ", value: cloudStr, in: CGRect(x: margin + 8 + halfWidth, y: wY, width: halfWidth, height: 12), boldAttrs: boldAttrs, valAttrs: valAttrs)
 
             wY += 13
             // Row 4: Density Altitude (Left) + Altimeter / Temp (Right)
             let daLossStr = risk.thrustEfficiencyLossPercent != nil ? " (-\(risk.thrustEfficiencyLossPercent!)% thrust)" : " (Nominal)"
-            drawInlineField(label: "Density Altitude: ", value: "\(Int(risk.densityAltitudeFeet)) ft\(daLossStr)", in: CGRect(x: margin + 8, y: wY, width: halfWidth, height: 12), boldAttrs: boldAttrs, valAttrs: valAttrs)
+            drawField(label: "Density Altitude: ", value: "\(Int(risk.densityAltitudeFeet)) ft\(daLossStr)", in: CGRect(x: margin + 8, y: wY, width: halfWidth, height: 12), boldAttrs: boldAttrs, valAttrs: valAttrs)
 
             let altTempStr = String(format: "%.2f inHg / %.1f°C", weather.altimeterInHg, weather.temperatureCelsius)
-            drawInlineField(label: "Altimeter / Temp: ", value: altTempStr, in: CGRect(x: margin + 8 + halfWidth, y: wY, width: halfWidth, height: 12), boldAttrs: boldAttrs, valAttrs: valAttrs)
+            drawField(label: "Altimeter / Temp: ", value: altTempStr, in: CGRect(x: margin + 8 + halfWidth, y: wY, width: halfWidth, height: 12), boldAttrs: boldAttrs, valAttrs: valAttrs)
+
+            wY += 13
+            // Row 5: Solar / Civil Twilight (§ 107.29)
+            let solar = AviationMath.solarTimes(latitude: locationCoordinate.latitude, longitude: locationCoordinate.longitude, date: risk.generatedAt)
+            let timeFmt = DateFormatter()
+            timeFmt.dateFormat = "HH:mm"
+            let solarStatusStr = "\(solar.status.badgeTitle) (\(solar.status.rawValue))"
+            drawField(label: "Solar Ops (§ 107.29): ", value: solarStatusStr, in: CGRect(x: margin + 8, y: wY, width: halfWidth, height: 12), boldAttrs: boldAttrs, valAttrs: valAttrs)
+
+            let twilightStr = "Dawn \(timeFmt.string(from: solar.dawn)) • Rise \(timeFmt.string(from: solar.sunrise)) • Set \(timeFmt.string(from: solar.sunset)) • Dusk \(timeFmt.string(from: solar.dusk))"
+            drawField(label: "Twilight Window: ", value: twilightStr, in: CGRect(x: margin + 8 + halfWidth, y: wY, width: halfWidth, height: 12), boldAttrs: boldAttrs, valAttrs: valAttrs)
 
             currentY += weatherHeight + 8
 
@@ -349,21 +360,7 @@ public enum PDFReportGenerator {
         title.draw(at: CGPoint(x: rect.origin.x + 8, y: rect.origin.y + 4), withAttributes: headerAttrs)
     }
 
-    private static func drawKeyValue(
-        label: String,
-        value: String,
-        labelWidth: CGFloat,
-        in box: CGRect,
-        y: CGFloat,
-        boldAttrs: [NSAttributedString.Key: Any],
-        valAttrs: [NSAttributedString.Key: Any]
-    ) {
-        label.draw(at: CGPoint(x: box.origin.x + 8, y: y), withAttributes: boldAttrs)
-        let valRect = CGRect(x: box.origin.x + 8 + labelWidth, y: y, width: box.width - labelWidth - 14, height: 12)
-        value.draw(in: valRect, withAttributes: valAttrs)
-    }
-
-    private static func drawInlineField(
+    private static func drawField(
         label: String,
         value: String,
         in rect: CGRect,

@@ -51,10 +51,6 @@ public struct PreFlightSignOffRecord: Codable, Sendable {
         checklistItems.allSatisfy { $0.isCompleted }
     }
 
-    public var isReadyToSign: Bool {
-        isAllChecked && !pilotName.trimmingCharacters(in: .whitespaces).isEmpty && !remotePilotCertificateNumber.trimmingCharacters(in: .whitespaces).isEmpty
-    }
-
     /// Standard FAA Part 107.49 pre-flight inspection checklist items.
     public static var standardItems: [ChecklistItem] = [
         ChecklistItem(

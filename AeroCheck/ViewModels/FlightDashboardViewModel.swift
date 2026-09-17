@@ -41,10 +41,7 @@ public final class FlightDashboardViewModel: @unchecked Sendable {
             return "\(diff / 3600)h ago"
         }
     }
-    
-    // Terrain and operational variables
-    public var terrainRoughness: TerrainRoughness = .suburban
-    
+
     // Pre-Flight Sign-off & Modals
     public var signOffRecord: PreFlightSignOffRecord = PreFlightSignOffRecord()
     public var generatedPDFData: Data?
@@ -113,12 +110,13 @@ public final class FlightDashboardViewModel: @unchecked Sendable {
         self.airspace = fetchedAirspace
         self.weather = fetchedWeather
 
-        // Evaluate RAM risk matrix against active aircraft specs and planned altitude
+        // Evaluate RAM risk matrix against active aircraft specs, planned altitude, and location
         self.riskResult = RiskEngine.evaluateRisk(
             airspace: fetchedAirspace,
             weather: fetchedWeather,
             drone: selectedDrone,
-            plannedAltitudeFeet: plannedAltitudeFeet
+            plannedAltitudeFeet: plannedAltitudeFeet,
+            coordinate: coord
         )
 
         self.lastUpdated = Date()
@@ -133,7 +131,8 @@ public final class FlightDashboardViewModel: @unchecked Sendable {
                 airspace: air,
                 weather: w,
                 drone: selectedDrone,
-                plannedAltitudeFeet: altitude
+                plannedAltitudeFeet: altitude,
+                coordinate: locationManager.coordinate
             )
         }
     }
@@ -148,7 +147,8 @@ public final class FlightDashboardViewModel: @unchecked Sendable {
                 airspace: air,
                 weather: w,
                 drone: drone,
-                plannedAltitudeFeet: plannedAltitudeFeet
+                plannedAltitudeFeet: plannedAltitudeFeet,
+                coordinate: locationManager.coordinate
             )
         }
     }

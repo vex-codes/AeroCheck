@@ -7,20 +7,45 @@
 
 import Foundation
 
-/// Terrain roughness surface shear exponent for Hellmann power law.
-public enum TerrainRoughness: Double, CaseIterable, Identifiable, Sendable {
-    case openTerrain = 0.15   // Runways, water bodies, flat fields
-    case suburban = 0.20      // Low density structures, suburban tree cover (Default)
-    case urbanCanyon = 0.30   // High density city centers, commercial buildings
+/// FAA Part 107.29 Daylight, Civil Twilight, and Night operations status.
+public enum SolarFlightStatus: String, Codable, Sendable {
+    case daylight = "Daylight"
+    case civilTwilight = "Civil Twilight"
+    case night = "Night Operations"
 
-    public var id: Double { rawValue }
-
-    public var title: String {
+    public var badgeTitle: String {
         switch self {
-        case .openTerrain: return "Open Terrain / Water (α = 0.15)"
-        case .suburban: return "Suburban / Tree Cover (α = 0.20)"
-        case .urbanCanyon: return "Urban / Structural Canyons (α = 0.30)"
+        case .daylight: return "DAYLIGHT VFR"
+        case .civilTwilight: return "CIVIL TWILIGHT"
+        case .night: return "NIGHT OPS"
         }
+    }
+
+    public var lightingRequirement: String {
+        switch self {
+        case .daylight:
+            return "Standard daylight flight (§ 107.29)"
+        case .civilTwilight:
+            return "Anti-collision strobe required (3 SM visibility, § 107.29(b))"
+        case .night:
+            return "Anti-collision strobe (3 SM) + Night training required (§ 107.29(a))"
+        }
+    }
+}
+
+public struct SolarTimesResult: Sendable {
+    public let dawn: Date
+    public let sunrise: Date
+    public let sunset: Date
+    public let dusk: Date
+    public let status: SolarFlightStatus
+
+    public init(dawn: Date, sunrise: Date, sunset: Date, dusk: Date, status: SolarFlightStatus) {
+        self.dawn = dawn
+        self.sunrise = sunrise
+        self.sunset = sunset
+        self.dusk = dusk
+        self.status = status
     }
 }
 
@@ -128,5 +153,58 @@ nonisolated public enum AviationMath: Sendable {
 
     public static func metersToFeet(_ meters: Double) -> Double {
         (meters * 3.28084).rounded()
+    }
+
+    // MARK: - FAA § 107.29 Solar & Civil Twilight Calculator
+
+    /// Calculates sunrise, sunset, and civil twilight boundaries for FAA § 107.29 operations.
+    public static func solarTimes(latitude: Double, longitude: Double, date: Date = Date()) -> SolarTimesResult {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(secondsFromGMT: 0) ?? .gmt
+
+        let dayOfYear = Double(calendar.ordinality(of: .day, in: .year, for: date) ?? 1)
+        let startOfDay = calendar.startOfDay(for: date)
+
+        let pi = Double.pi
+        let degToRad = pi / 180.0
+        let radToDeg = 180.0 / pi
+
+        // Solar declination (approx in radians)
+        let dec = -23.44 * cos(2.0 * pi / 365.0 * (dayOfYear + 10.0)) * degToRad
+
+        // Equation of time (minutes)
+        let b = 2.0 * pi * (dayOfYear - 81.0) / 365.0
+        let eot = 9.87 * sin(2.0 * b) - 7.53 * cos(b) - 1.5 * sin(b)
+
+        // Solar noon in UTC hours
+        let solarNoonHours = (720.0 - (4.0 * longitude) - eot) / 60.0
+
+        let latRad = latitude * degToRad
+
+        func hourAngle(forZenithDeg zenithDeg: Double) -> Double? {
+            let zenithRad = zenithDeg * degToRad
+            let cosH = (cos(zenithRad) - (sin(latRad) * sin(dec))) / (cos(latRad) * cos(dec))
+            if cosH > 1.0 || cosH < -1.0 { return nil }
+            return acos(cosH) * radToDeg / 15.0
+        }
+
+        let hSunrise = hourAngle(forZenithDeg: 90.833) ?? 6.0
+        let hCivil = hourAngle(forZenithDeg: 96.0) ?? (hSunrise + 0.5)
+
+        let dawn = startOfDay.addingTimeInterval((solarNoonHours - hCivil) * 3600.0)
+        let sunrise = startOfDay.addingTimeInterval((solarNoonHours - hSunrise) * 3600.0)
+        let sunset = startOfDay.addingTimeInterval((solarNoonHours + hSunrise) * 3600.0)
+        let dusk = startOfDay.addingTimeInterval((solarNoonHours + hCivil) * 3600.0)
+
+        let status: SolarFlightStatus
+        if date >= sunrise && date <= sunset {
+            status = .daylight
+        } else if (date >= dawn && date < sunrise) || (date > sunset && date <= dusk) {
+            status = .civilTwilight
+        } else {
+            status = .night
+        }
+
+        return SolarTimesResult(dawn: dawn, sunrise: sunrise, sunset: sunset, dusk: dusk, status: status)
     }
 }

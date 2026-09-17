@@ -16,13 +16,11 @@ import MapKit
 /// - 0.5px hairline bottom divider.
 public struct FlightMapView: View {
     public let coordinate: CLLocationCoordinate2D?
-    public let airspace: AirspaceEvaluation?
 
     @State private var position: MapCameraPosition = .automatic
 
-    public init(coordinate: CLLocationCoordinate2D?, airspace: AirspaceEvaluation?) {
+    public init(coordinate: CLLocationCoordinate2D?) {
         self.coordinate = coordinate
-        self.airspace = airspace
     }
 
     private var activeCoordinate: CLLocationCoordinate2D {

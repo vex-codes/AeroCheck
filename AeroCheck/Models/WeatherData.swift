@@ -38,10 +38,9 @@ nonisolated public struct NOAACloudLayer: Codable, Sendable {
 }
 
 /// Raw DTO parsed from NOAA Aviation Weather Center JSON API.
-nonisolated public struct NOAAMetarItem: Codable, Sendable {
+nonisolated public struct NOAAMetarItem: Decodable, Sendable {
     public let icaoId: String?
     public let obsTime: Int?
-    public let reportTime: String?
     public let temp: Double?
     public let dewp: Double?
     public let wspd: Double? // knots
@@ -52,7 +51,6 @@ nonisolated public struct NOAAMetarItem: Codable, Sendable {
     public let ceil: Double? // hundreds of feet (e.g., 25 = 2500ft)
     public let fltcat: String?
     public let fltCat: String?
-    public let cover: String?
     public let clouds: [NOAACloudLayer]?
     public let rawOb: String?
     public let lat: Double?

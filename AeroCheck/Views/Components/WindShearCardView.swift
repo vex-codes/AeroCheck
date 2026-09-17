@@ -6,12 +6,14 @@
 //
 
 import SwiftUI
+import CoreLocation
 
 /// Professional Altitudinal Wind Shear & Atmospheric Telemetry Grid adhering to ForeFlight/DJI Fly:
 /// - Edge-to-edge seamless presentation with zero boxy container nesting.
 /// - Staggered multi-column dashboard grid with 28pt Semibold numbers.
 /// - Sleek 3px multi-segment shear gradient track lines with numeric markers.
 /// - Borderless 3-column pill layout for Visibility, Cloud Base, and Density Altitude.
+/// - FAA § 107.29 Solar & Civil Twilight operational lighting awareness strip.
 /// - Clean 0.5px hairline bottom divider.
 public struct WindShearCardView: View {
     public let weather: AviationWeatherReport?
@@ -19,6 +21,7 @@ public struct WindShearCardView: View {
     public let densityAltitude: Double
     public let thrustLossPercent: Double?
     public let plannedAltitude: Int
+    public let coordinate: CLLocationCoordinate2D?
 
     @State private var showRawMetar: Bool = false
 
@@ -27,13 +30,15 @@ public struct WindShearCardView: View {
         drone: DroneProfile,
         densityAltitude: Double,
         thrustLossPercent: Double?,
-        plannedAltitude: Int = 400
+        plannedAltitude: Int = 400,
+        coordinate: CLLocationCoordinate2D? = nil
     ) {
         self.weather = weather
         self.drone = drone
         self.densityAltitude = densityAltitude
         self.thrustLossPercent = thrustLossPercent
         self.plannedAltitude = plannedAltitude
+        self.coordinate = coordinate
     }
 
     private var wReport: AviationWeatherReport {
@@ -205,6 +210,57 @@ public struct WindShearCardView: View {
                     value: "\(Int(densityAltitude)) FT",
                     statusColor: densityAltitude > 4000 ? DesignTokens.statusCaution : DesignTokens.statusSafe,
                     subtitle: thrustLossPercent != nil ? "-\(Int(thrustLossPercent!))% Thrust" : "Nominal"
+                )
+            }
+
+            // FAA § 107.29 Solar & Civil Twilight Awareness Strip
+            if let coord = coordinate {
+                let solar = AviationMath.solarTimes(latitude: coord.latitude, longitude: coord.longitude)
+                let timeFmt: DateFormatter = {
+                    let df = DateFormatter()
+                    df.dateFormat = "HH:mm"
+                    return df
+                }()
+                let statusColor: Color = {
+                    switch solar.status {
+                    case .daylight: return DesignTokens.statusSafe
+                    case .civilTwilight: return DesignTokens.statusCaution
+                    case .night: return DesignTokens.statusCaution
+                    }
+                }()
+
+                HStack(spacing: DesignTokens.space8) {
+                    HStack(spacing: 5) {
+                        Image(systemName: solar.status == .daylight ? "sun.max.fill" : (solar.status == .civilTwilight ? "sunset.fill" : "moon.stars.fill"))
+                            .font(.caption2.weight(.bold))
+                            .foregroundStyle(statusColor)
+
+                        Text(solar.status.badgeTitle)
+                            .font(.caption2.weight(.heavy).monospaced())
+                            .foregroundStyle(statusColor)
+                    }
+                    .padding(.horizontal, 7)
+                    .padding(.vertical, 3.5)
+                    .background(
+                        Capsule().fill(statusColor.opacity(0.12))
+                    )
+
+                    Text("Rise \(timeFmt.string(from: solar.sunrise)) • Set \(timeFmt.string(from: solar.sunset)) • Dusk \(timeFmt.string(from: solar.dusk))")
+                        .font(.caption2.weight(.medium))
+                        .foregroundStyle(DesignTokens.textSecondary)
+                        .lineLimit(1)
+
+                    Spacer()
+
+                    Text("§ 107.29")
+                        .font(.caption2.weight(.bold).monospaced())
+                        .foregroundStyle(DesignTokens.textTertiary)
+                }
+                .padding(.horizontal, 10)
+                .padding(.vertical, 7)
+                .background(
+                    RoundedRectangle(cornerRadius: DesignTokens.radiusInner, style: .continuous)
+                        .fill(DesignTokens.surfaceSecondary.opacity(0.5))
                 )
             }
 

@@ -37,19 +37,6 @@ public enum DesignTokens {
     public static let textPrimary = Color.white
     public static let textSecondary = Color(hex: "8E8E93")           // Apple system secondaryLabel
     public static let textTertiary = Color(hex: "636366")            // Apple system tertiaryLabel
-
-    // Legacy Aliases for backwards compatibility
-    public static let canvasBackground = surfacePrimary
-    public static let cardBackground = surfaceSecondary
-    public static let cardBackgroundSecondary = surfaceTertiary
-    public static let cardBorder = borderHairline
-    public static let verdictSafe = statusSafe
-    public static let verdictCaution = statusCaution
-    public static let verdictNoGo = statusAlert
-    public static let aeroBlue = accent
-    public static let skyBlue = accent
-    public static let textMuted = textTertiary
-
     // MARK: - Layout Rhythm (8pt Mathematical Grid)
     public static let space4: CGFloat = 4.0
     public static let space6: CGFloat = 6.0
@@ -61,21 +48,10 @@ public enum DesignTokens {
     public static let space24: CGFloat = 24.0
     public static let space32: CGFloat = 32.0
 
-    public static let spaceXS = space4
-    public static let spaceS = space8
-    public static let spaceM = space16
-    public static let spaceL = space24
-    public static let spaceXL = space32
-    public static let spaceXXL: CGFloat = 48.0
-
     // MARK: - Curvatures
     public static let radiusInner: CGFloat = 10.0
     public static let radiusCard: CGFloat = 16.0
     public static let radiusPill: CGFloat = 999.0
-
-    public static let radiusS = radiusInner
-    public static let radiusM = radiusCard
-    public static let radiusL: CGFloat = 20.0
 }
 
 // MARK: - Tactile Micro-Interaction Button Style

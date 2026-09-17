@@ -97,22 +97,16 @@ public nonisolated struct AirspaceEvaluation: Codable, Sendable {
 
 // MARK: - ArcGIS REST Response DTOs
 
-nonisolated public struct ArcGISQueryResponse: Codable, Sendable {
+nonisolated public struct ArcGISQueryResponse: Decodable, Sendable {
     public let features: [ArcGISFeature]?
-    public let error: ArcGISError?
 }
 
-nonisolated public struct ArcGISError: Codable, Sendable {
-    public let code: Int?
-    public let message: String?
-}
-
-nonisolated public struct ArcGISFeature: Codable, Sendable {
+nonisolated public struct ArcGISFeature: Decodable, Sendable {
     public let attributes: [String: AnyCodableValue]?
 }
 
 /// Flexible JSON decoder helper for ArcGIS attribute dictionary values.
-nonisolated public enum AnyCodableValue: Codable, Sendable {
+nonisolated public enum AnyCodableValue: Decodable, Sendable {
     case string(String)
     case int(Int)
     case double(Double)
@@ -133,17 +127,6 @@ nonisolated public enum AnyCodableValue: Codable, Sendable {
             self = .bool(boolVal)
         } else {
             self = .null
-        }
-    }
-
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.singleValueContainer()
-        switch self {
-        case .string(let s): try container.encode(s)
-        case .int(let i): try container.encode(i)
-        case .double(let d): try container.encode(d)
-        case .bool(let b): try container.encode(b)
-        case .null: try container.encodeNil()
         }
     }
 

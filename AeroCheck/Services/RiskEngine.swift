@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import CoreLocation
 
 /// Core algorithmic Risk Assessment Matrix (RAM) conforming to FAA Part 107 pre-flight standards.
 public enum RiskEngine {
@@ -15,7 +16,8 @@ public enum RiskEngine {
         airspace: AirspaceEvaluation,
         weather: AviationWeatherReport,
         drone: DroneProfile,
-        plannedAltitudeFeet: Int = 400
+        plannedAltitudeFeet: Int = 400,
+        coordinate: CLLocationCoordinate2D? = nil
     ) -> RiskAssessmentResult {
         var factors: [RiskFactorItem] = []
 
@@ -183,6 +185,34 @@ public enum RiskEngine {
                 summary: String(format: "Ambient temperature (%.1f°C) exceeds %@ operating envelope (%.0f°C to %.0f°C). Risk of battery shutdown.", temp, drone.name, drone.minOperatingTempC, drone.maxOperatingTempC),
                 regulatoryReference: "Battery & Sensor Temp Limit"
             ))
+        }
+
+        // 7. Daylight, Civil Twilight & Anti-Collision Lighting Check (§ 107.29)
+        if let coord = coordinate {
+            let solar = AviationMath.solarTimes(latitude: coord.latitude, longitude: coord.longitude)
+            switch solar.status {
+            case .daylight:
+                factors.append(RiskFactorItem(
+                    category: .solarLighting,
+                    severity: .safe,
+                    summary: "Daylight operations active. Standard visual line-of-sight Part 107 flight rules.",
+                    regulatoryReference: "FAA § 107.29"
+                ))
+            case .civilTwilight:
+                factors.append(RiskFactorItem(
+                    category: .solarLighting,
+                    severity: .caution,
+                    summary: "Civil Twilight operations. Anti-collision lighting visible for at least 3 statute miles mandatory (§ 107.29(b)).",
+                    regulatoryReference: "FAA § 107.29(b)"
+                ))
+            case .night:
+                factors.append(RiskFactorItem(
+                    category: .solarLighting,
+                    severity: .caution,
+                    summary: "Night operations active. Anti-collision strobe (3 SM visibility) and Remote Pilot night training verification required.",
+                    regulatoryReference: "FAA § 107.29(a)"
+                ))
+            }
         }
 
         // Aggregate Overall Verdict

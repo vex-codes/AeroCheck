@@ -39,6 +39,7 @@ public enum RiskCategory: String, Codable, Sendable {
     case windAloft = "Wind & Shear at 400ft"
     case densityAltitude = "Density Altitude & Thrust"
     case temperature = "Aircraft Operating Temp"
+    case solarLighting = "Daylight & Lighting (§ 107.29)"
 }
 
 /// A specific evaluated factor row in the RAM.

@@ -46,8 +46,7 @@ struct ContentView: View {
 
                         // 3. Seamless Tactical Map
                         FlightMapView(
-                            coordinate: viewModel.locationManager.coordinate,
-                            airspace: viewModel.airspace
+                            coordinate: viewModel.locationManager.coordinate
                         )
 
                         // 4. Atmospheric Sounding & Altitude-Specific Wind Envelope
@@ -56,7 +55,8 @@ struct ContentView: View {
                             drone: viewModel.selectedDrone,
                             densityAltitude: viewModel.riskResult?.densityAltitudeFeet ?? 0,
                             thrustLossPercent: viewModel.riskResult?.thrustEfficiencyLossPercent,
-                            plannedAltitude: viewModel.plannedAltitudeFeet
+                            plannedAltitude: viewModel.plannedAltitudeFeet,
+                            coordinate: viewModel.locationManager.coordinate
                         )
 
                         // Clear padding so scroll view content clears the floating action capsule
