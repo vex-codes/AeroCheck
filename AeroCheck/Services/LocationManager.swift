@@ -7,6 +7,7 @@
 
 import Foundation
 import CoreLocation
+import MapKit
 import SwiftUI
 
 /// Modern CoreLocation coordinator using the `@Observable` macro for seamless SwiftUI binding.
@@ -21,7 +22,6 @@ public final class LocationManager: NSObject, CLLocationManagerDelegate, @unchec
     public var errorMessage: String?
 
     private let manager = CLLocationManager()
-    private let geocoder = CLGeocoder()
 
     public override init() {
         super.init()
@@ -106,29 +106,37 @@ public final class LocationManager: NSObject, CLLocationManagerDelegate, @unchec
 
     private func reverseGeocode(coordinate: CLLocationCoordinate2D) {
         let clLocation = CLLocation(latitude: coordinate.latitude, longitude: coordinate.longitude)
-        geocoder.reverseGeocodeLocation(clLocation) { [weak self] placemarks, error in
-            guard let self = self else { return }
-            if let pm = placemarks?.first {
-                let name = pm.name ?? ""
-                let locality = pm.locality ?? pm.subAdministrativeArea ?? ""
-                let state = pm.administrativeArea ?? ""
-                
-                var displayParts: [String] = []
-                if !name.isEmpty && name != locality {
-                    displayParts.append(name)
-                }
-                if !locality.isEmpty {
-                    displayParts.append(locality)
-                }
-                if !state.isEmpty {
-                    displayParts.append(state)
-                }
+        guard let request = MKReverseGeocodingRequest(location: clLocation) else {
+            self.placemarkName = String(format: "%.4f, %.4f", coordinate.latitude, coordinate.longitude)
+            self.streetAddress = self.placemarkName
+            return
+        }
 
-                let fullText = displayParts.joined(separator: ", ")
-                self.placemarkName = fullText.isEmpty ? String(format: "%.4f, %.4f", coordinate.latitude, coordinate.longitude) : fullText
-                self.streetAddress = fullText
-            } else {
-                self.placemarkName = String(format: "Lat: %.4f, Lon: %.4f", coordinate.latitude, coordinate.longitude)
+        Task { @MainActor [weak self] in
+            guard let self = self else { return }
+            do {
+                let mapItems = try await request.mapItems
+                if let item = mapItems.first {
+                    let name = item.name ?? ""
+                    let address = item.address?.shortAddress ?? item.address?.fullAddress ?? ""
+
+                    var displayParts: [String] = []
+                    if !name.isEmpty {
+                        displayParts.append(name)
+                    }
+                    if !address.isEmpty && address != name {
+                        displayParts.append(address)
+                    }
+
+                    let fullText = displayParts.joined(separator: ", ")
+                    self.placemarkName = fullText.isEmpty ? String(format: "%.4f, %.4f", coordinate.latitude, coordinate.longitude) : fullText
+                    self.streetAddress = fullText
+                } else {
+                    self.placemarkName = String(format: "%.4f, %.4f", coordinate.latitude, coordinate.longitude)
+                    self.streetAddress = self.placemarkName
+                }
+            } catch {
+                self.placemarkName = String(format: "%.4f, %.4f", coordinate.latitude, coordinate.longitude)
                 self.streetAddress = self.placemarkName
             }
         }

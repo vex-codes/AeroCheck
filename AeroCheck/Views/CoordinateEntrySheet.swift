@@ -278,8 +278,8 @@ public struct CoordinateEntrySheet: View {
                         Button {
                             let impact = UIImpactFeedbackGenerator(style: .medium)
                             impact.impactOccurred()
-                            let coord = item.placemark.coordinate
-                            let name = item.name ?? item.placemark.title ?? "Selected Location"
+                            let coord = item.location.coordinate
+                            let name = item.name ?? "Selected Location"
                             onSelectCoordinate(coord.latitude, coord.longitude, name)
                             dismiss()
                         } label: {
@@ -294,14 +294,14 @@ public struct CoordinateEntrySheet: View {
                                         .foregroundStyle(DesignTokens.textPrimary)
                                         .lineLimit(1)
 
-                                    if let sub = item.placemark.title {
+                                    if let sub = item.address?.shortAddress ?? item.address?.fullAddress {
                                         Text(sub)
                                             .font(.caption)
                                             .foregroundStyle(DesignTokens.textSecondary)
                                             .lineLimit(1)
                                     }
 
-                                    Text(String(format: "%.4f, %.4f", item.placemark.coordinate.latitude, item.placemark.coordinate.longitude))
+                                    Text(String(format: "%.4f, %.4f", item.location.coordinate.latitude, item.location.coordinate.longitude))
                                         .font(.caption2.monospaced())
                                         .foregroundStyle(DesignTokens.textTertiary)
                                 }
