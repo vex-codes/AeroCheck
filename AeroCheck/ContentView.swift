@@ -8,12 +8,11 @@
 import SwiftUI
 import CoreLocation
 
-/// Primary Flight Dashboard conforming to Apple Human Interface Guidelines:
-/// - Semantic typography (Headline, Subheadline, Footnote)
-/// - Flat surfaces with precise 1pt hairline borders (zero floating gradients or glowing shadows)
-/// - Single dominant interactive accent (aviation cobalt)
-/// - Strict 8pt layout rhythm and 44x44pt minimum touch targets
-/// - Explicit micro-interactions on all controls
+/// 10x Native iOS Flight Dashboard adhering strictly to Apple HIG:
+/// - Zero toolbar clutter: Native pull-to-refresh replaces manual refresh buttons.
+/// - Inline native iOS Menu for drone fleet switching (no redundant full-screen modals).
+/// - Pure 44x44pt minimum tap targets with subtle tactile press feedback.
+/// - Flat surfaces with 1pt hairline borders (zero artificial drop shadows or floating gradients).
 struct ContentView: View {
     @State private var viewModel = FlightDashboardViewModel()
 
@@ -22,22 +21,16 @@ struct ContentView: View {
             ZStack(alignment: .bottom) {
                 ScrollView {
                     VStack(spacing: DesignTokens.space16) {
-                        // Top Flight Header: Location & Drone Selector Pills
-                        flightHeaderView
+                        // Top Context Bar: Location & Drone Fleet Quick Menu
+                        flightContextBar
 
-                        // 1. Hero Go / Caution / No-Go Verdict Banner
+                        // 1. Master Verdict Hero
                         VerdictBannerView(
                             result: viewModel.riskResult,
                             isLoading: viewModel.isLoading
                         )
 
-                        // 2. Tactical Airspace Map Card
-                        FlightMapView(
-                            coordinate: viewModel.locationManager.coordinate,
-                            airspace: viewModel.airspace
-                        )
-
-                        // 3. Airspace & LAANC Authorization Card
+                        // 2. Airspace Authorization & LAANC Direct Action
                         AirspaceCardView(
                             airspace: viewModel.airspace,
                             onOpenLAANC: {
@@ -45,7 +38,13 @@ struct ContentView: View {
                             }
                         )
 
-                        // 4. Atmospheric Sounding & 400ft Wind Shear Profile Card
+                        // 3. Tactical Map
+                        FlightMapView(
+                            coordinate: viewModel.locationManager.coordinate,
+                            airspace: viewModel.airspace
+                        )
+
+                        // 4. Atmospheric Sounding & 400ft Wind Envelope
                         WindShearCardView(
                             weather: viewModel.weather,
                             drone: viewModel.selectedDrone,
@@ -53,8 +52,8 @@ struct ContentView: View {
                             thrustLossPercent: viewModel.riskResult?.thrustEfficiencyLossPercent
                         )
 
-                        // Bottom clearance for persistent action button
-                        Color.clear.frame(height: 72)
+                        // Spacing for persistent bottom CTA
+                        Color.clear.frame(height: 64)
                     }
                     .padding(.horizontal, DesignTokens.space16)
                     .padding(.top, DesignTokens.space8)
@@ -82,38 +81,18 @@ struct ContentView: View {
                 }
 
                 ToolbarItem(placement: .topBarTrailing) {
-                    HStack(spacing: DesignTokens.space8) {
-                        Button {
-                            viewModel.showCoordinateSheet = true
-                        } label: {
-                            Image(systemName: "slider.horizontal.3")
-                                .font(.footnote.weight(.semibold))
-                                .foregroundStyle(DesignTokens.textSecondary)
-                                .frame(width: 44, height: 44)
-                                .contentShape(Rectangle())
-                        }
-                        .buttonStyle(.interactivePress)
-
-                        Button {
-                            Task {
-                                await viewModel.refreshData()
-                            }
-                        } label: {
-                            Image(systemName: "arrow.clockwise")
-                                .font(.footnote.weight(.semibold))
-                                .foregroundStyle(DesignTokens.accent)
-                                .frame(width: 44, height: 44)
-                                .contentShape(Rectangle())
-                        }
-                        .buttonStyle(.interactivePress)
+                    if viewModel.isLoading {
+                        ProgressView()
+                            .tint(DesignTokens.accent)
                     }
                 }
             }
-            // Sheet presentations
+            // Dedicated sheets
             .sheet(isPresented: $viewModel.showChecklistSheet) {
                 PreFlightChecklistView(
                     record: $viewModel.signOffRecord,
                     onCompleteAndGeneratePDF: {
+                        viewModel.savePilotCredentials()
                         viewModel.generateAuditPDF()
                     }
                 )
@@ -136,6 +115,13 @@ struct ContentView: View {
             .sheet(isPresented: $viewModel.showCoordinateSheet) {
                 CoordinateEntrySheet(
                     currentCoordinate: viewModel.locationManager.coordinate,
+                    onResetToGPS: {
+                        viewModel.locationManager.requestCurrentLocation()
+                        Task {
+                            try? await Task.sleep(nanoseconds: 500_000_000)
+                            await viewModel.refreshData()
+                        }
+                    },
                     onSelectCoordinate: { lat, lon, name in
                         viewModel.locationManager.setManualCoordinate(latitude: lat, longitude: lon, name: name)
                         Task {
@@ -154,9 +140,9 @@ struct ContentView: View {
 
     // MARK: - Subviews
 
-    private var flightHeaderView: some View {
+    private var flightContextBar: some View {
         HStack(alignment: .center, spacing: DesignTokens.space8) {
-            // Location Badge with 44pt tap target
+            // Location Trigger Pill
             Button {
                 viewModel.showCoordinateSheet = true
             } label: {
@@ -190,9 +176,30 @@ struct ContentView: View {
 
             Spacer()
 
-            // Drone Fleet Selector Pill with 44pt tap target
-            Button {
-                viewModel.showDronePickerSheet = true
+            // Native iOS Drone Selection Menu
+            Menu {
+                Section("Active Airframe") {
+                    ForEach(viewModel.droneProfiles) { profile in
+                        Button {
+                            viewModel.selectDrone(profile)
+                        } label: {
+                            HStack {
+                                Text(profile.name)
+                                if profile.id == viewModel.selectedDrone.id {
+                                    Image(systemName: "checkmark")
+                                }
+                            }
+                        }
+                    }
+                }
+
+                Section {
+                    Button {
+                        viewModel.showDronePickerSheet = true
+                    } label: {
+                        Label("Manage Fleet...", systemImage: "slider.horizontal.3")
+                    }
+                }
             } label: {
                 HStack(spacing: DesignTokens.space4) {
                     Image(systemName: "airplane")
@@ -204,7 +211,7 @@ struct ContentView: View {
                         .foregroundStyle(DesignTokens.textPrimary)
                         .lineLimit(1)
 
-                    Image(systemName: "chevron.right")
+                    Image(systemName: "chevron.up.chevron.down")
                         .font(.caption2)
                         .foregroundStyle(DesignTokens.textTertiary)
                 }

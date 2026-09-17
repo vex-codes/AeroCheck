@@ -56,6 +56,18 @@ public final class FlightDashboardViewModel: @unchecked Sendable {
         } else {
             self.selectedDrone = loadedProfiles.first ?? DroneProfile.default
         }
+
+        let savedPilotName = UserDefaults.standard.string(forKey: "aerocheck.pilotName") ?? ""
+        let savedCertNum = UserDefaults.standard.string(forKey: "aerocheck.certificateNumber") ?? ""
+        self.signOffRecord = PreFlightSignOffRecord(
+            pilotName: savedPilotName,
+            remotePilotCertificateNumber: savedCertNum
+        )
+    }
+
+    public func savePilotCredentials() {
+        UserDefaults.standard.set(signOffRecord.pilotName, forKey: "aerocheck.pilotName")
+        UserDefaults.standard.set(signOffRecord.remotePilotCertificateNumber, forKey: "aerocheck.certificateNumber")
     }
 
     /// Initializes location updates and performs initial data fetch.
