@@ -75,30 +75,44 @@ struct ContentView: View {
             .background(DesignTokens.surfacePrimary.ignoresSafeArea())
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
+                // Top-Left App / Fleet Icon Button
                 ToolbarItem(placement: .topBarLeading) {
-                    HStack(spacing: DesignTokens.space8) {
+                    Button {
+                        let impact = UIImpactFeedbackGenerator(style: .light)
+                        impact.impactOccurred()
+                        viewModel.showDronePickerSheet = true
+                    } label: {
                         ZStack {
                             Circle()
-                                .fill(DesignTokens.surfaceSecondary)
-                                .frame(width: 34, height: 34)
+                                .fill(.ultraThinMaterial)
+                                .frame(width: 36, height: 36)
                                 .overlay(
                                     Circle()
-                                        .stroke(DesignTokens.borderHairline.opacity(0.8), lineWidth: 0.5)
+                                        .stroke(Color.white.opacity(0.16), lineWidth: 0.5)
                                 )
 
                             Image(systemName: "drone.fill")
-                                .font(.system(size: 14, weight: .bold))
+                                .font(.system(size: 15, weight: .bold))
                                 .foregroundStyle(DesignTokens.accent)
                         }
-                        .frame(width: 34, height: 34)
+                        .frame(width: 44, height: 44)
+                        .contentShape(Circle())
+                    }
+                    .buttonStyle(.interactivePress)
+                    .accessibilityLabel("Active Aircraft Fleet")
+                }
 
-                        Text("AeroCheck")
-                            .font(.headline.weight(.heavy))
-                            .tracking(-0.3)
+                // Centered App Identity
+                ToolbarItem(placement: .principal) {
+                    HStack(spacing: 6) {
+                        Text("AEROCHECK")
+                            .font(.system(size: 13, weight: .heavy, design: .monospaced))
+                            .tracking(1.4)
                             .foregroundStyle(DesignTokens.textPrimary)
                     }
                 }
 
+                // Top-Right Sync / Refresh Button
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
                         let impact = UIImpactFeedbackGenerator(style: .medium)
@@ -109,11 +123,11 @@ struct ContentView: View {
                     } label: {
                         ZStack {
                             Circle()
-                                .fill(DesignTokens.surfaceSecondary)
-                                .frame(width: 34, height: 34)
+                                .fill(.ultraThinMaterial)
+                                .frame(width: 36, height: 36)
                                 .overlay(
                                     Circle()
-                                        .stroke(DesignTokens.borderHairline.opacity(0.8), lineWidth: 0.5)
+                                        .stroke(Color.white.opacity(0.16), lineWidth: 0.5)
                                 )
 
                             if viewModel.isLoading {
@@ -122,12 +136,12 @@ struct ContentView: View {
                                     .controlSize(.small)
                             } else {
                                 Image(systemName: "arrow.clockwise")
-                                    .font(.system(size: 14, weight: .bold))
+                                    .font(.system(size: 15, weight: .bold))
                                     .foregroundStyle(DesignTokens.accent)
                             }
                         }
                         .frame(width: 44, height: 44)
-                        .contentShape(Rectangle())
+                        .contentShape(Circle())
                     }
                     .buttonStyle(.interactivePress)
                     .disabled(viewModel.isLoading)
@@ -298,21 +312,30 @@ struct ContentView: View {
     /// Allows pilot to specify target flight altitude so low-altitude operations are not blocked
     /// by high-altitude wind shear at 400ft.
     private var missionAltitudeSelector: some View {
-        HStack(spacing: DesignTokens.space8) {
-            HStack(spacing: DesignTokens.space4) {
-                Image(systemName: "arrow.up.and.down.and.sparkles")
-                    .font(.system(size: 11, weight: .bold))
+        VStack(spacing: 6) {
+            // Instrument Subtitle Row
+            HStack {
+                HStack(spacing: 4) {
+                    Image(systemName: "slider.horizontal.2.square")
+                        .font(.system(size: 10, weight: .bold))
+                        .foregroundStyle(DesignTokens.accent)
+
+                    Text("TARGET MISSION ALTITUDE")
+                        .font(.system(size: 10, weight: .heavy, design: .monospaced))
+                        .tracking(0.6)
+                        .foregroundStyle(DesignTokens.textTertiary)
+                }
+
+                Spacer()
+
+                Text(viewModel.plannedAltitudeFeet == 400 ? "400 FT AGL (FAA MAX)" : "\(viewModel.plannedAltitudeFeet) FT AGL TARGET")
+                    .font(.system(size: 10, weight: .bold, design: .monospaced))
                     .foregroundStyle(DesignTokens.accent)
-
-                Text("MISSION ALT")
-                    .font(.caption2.weight(.heavy).monospaced())
-                    .tracking(0.5)
-                    .foregroundStyle(DesignTokens.textTertiary)
             }
+            .padding(.horizontal, 2)
 
-            Spacer()
-
-            HStack(spacing: DesignTokens.space4) {
+            // Equal-Width Segmented Flight Ceiling Bar
+            HStack(spacing: 4) {
                 ForEach([100, 200, 300, 400], id: \.self) { alt in
                     let isSelected = viewModel.plannedAltitudeFeet == alt
                     Button {
@@ -323,30 +346,31 @@ struct ContentView: View {
                         }
                     } label: {
                         Text("\(alt) FT")
-                            .font(.system(size: 11, weight: isSelected ? .bold : .semibold, design: .monospaced))
+                            .font(.system(size: 12, weight: isSelected ? .heavy : .semibold, design: .monospaced))
+                            .lineLimit(1)
+                            .fixedSize(horizontal: true, vertical: false)
                             .foregroundStyle(isSelected ? .white : DesignTokens.textSecondary)
-                            .padding(.horizontal, 10)
-                            .padding(.vertical, 6)
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 34)
                             .background(
-                                Capsule()
-                                    .fill(isSelected ? DesignTokens.accent : DesignTokens.surfaceTertiary)
+                                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                                    .fill(isSelected ? DesignTokens.accent : Color.white.opacity(0.04))
                             )
                     }
                     .buttonStyle(.plain)
-                    .accessibilityLabel("Set planned mission ceiling to \(alt) feet AGL")
+                    .accessibilityLabel("Set planned altitude to \(alt) feet AGL")
                 }
             }
+            .padding(3)
+            .background(
+                RoundedRectangle(cornerRadius: 11, style: .continuous)
+                    .fill(DesignTokens.surfaceSecondary)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 11, style: .continuous)
+                            .stroke(DesignTokens.borderHairline, lineWidth: 0.5)
+                    )
+            )
         }
-        .padding(.horizontal, DesignTokens.space12)
-        .padding(.vertical, 6)
-        .background(
-            RoundedRectangle(cornerRadius: DesignTokens.radiusInner, style: .continuous)
-                .fill(DesignTokens.surfaceSecondary)
-                .overlay(
-                    RoundedRectangle(cornerRadius: DesignTokens.radiusInner, style: .continuous)
-                        .stroke(DesignTokens.borderHairline.opacity(0.8), lineWidth: 0.5)
-                )
-        )
     }
 
     /// Premium Native Sticky Bottom Bar with Translucent Backdrop Blur

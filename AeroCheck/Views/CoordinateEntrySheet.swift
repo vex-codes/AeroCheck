@@ -109,7 +109,7 @@ public struct CoordinateEntrySheet: View {
                 onResetToGPS()
                 dismiss()
             } label: {
-                HStack(spacing: DesignTokens.space16) {
+                HStack(spacing: DesignTokens.space12) {
                     ZStack {
                         Circle()
                             .fill(DesignTokens.accentMuted)
@@ -120,18 +120,18 @@ public struct CoordinateEntrySheet: View {
                             .foregroundStyle(DesignTokens.accent)
                     }
 
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("Acquire Current Device Location")
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text("Use Current Device Location")
                             .font(.subheadline.weight(.bold))
                             .foregroundStyle(DesignTokens.textPrimary)
 
-                        Text("Lock on via hardware GPS and query real-time FAA airspace boundary buffers.")
+                        Text("Acquire live GPS fix from hardware and refresh FAA airspace buffers.")
                             .font(.caption)
                             .foregroundStyle(DesignTokens.textSecondary)
-                            .lineLimit(2)
+                            .fixedSize(horizontal: false, vertical: true)
                     }
 
-                    Spacer()
+                    Spacer(minLength: 8)
 
                     Image(systemName: "chevron.right")
                         .font(.caption2.weight(.bold))
@@ -151,30 +151,72 @@ public struct CoordinateEntrySheet: View {
             }
             .buttonStyle(.interactivePress)
 
+            // Precision Active Position Telematics Grid (Never Wraps)
             if let coord = currentCoordinate {
-                HStack(spacing: DesignTokens.space12) {
-                    Image(systemName: "antenna.radiowaves.left.and.right")
-                        .font(.subheadline)
-                        .foregroundStyle(DesignTokens.statusSafe)
+                VStack(alignment: .leading, spacing: DesignTokens.space10) {
+                    HStack {
+                        HStack(spacing: 6) {
+                            Circle()
+                                .fill(DesignTokens.statusSafe)
+                                .frame(width: 8, height: 8)
 
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("Active Position Fix")
-                            .font(.caption2.weight(.heavy).monospaced())
+                            Text("HARDWARE GPS LOCKED")
+                                .font(.system(size: 10, weight: .heavy, design: .monospaced))
+                                .tracking(0.6)
+                                .foregroundStyle(DesignTokens.statusSafe)
+                        }
+
+                        Spacer()
+
+                        Text("ACCURACY ±3M")
+                            .font(.system(size: 10, weight: .bold, design: .monospaced))
                             .foregroundStyle(DesignTokens.textTertiary)
-
-                        Text(String(format: "LAT %.5f°  •  LON %.5f°", coord.latitude, coord.longitude))
-                            .font(.subheadline.weight(.semibold).monospaced())
-                            .foregroundStyle(DesignTokens.textPrimary)
                     }
 
-                    Spacer()
+                    Divider()
+                        .overlay(DesignTokens.borderHairline.opacity(0.7))
+
+                    HStack(spacing: 0) {
+                        // Latitude Column
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("LATITUDE")
+                                .font(.system(size: 9, weight: .heavy, design: .monospaced))
+                                .foregroundStyle(DesignTokens.textTertiary)
+
+                            Text(String(format: "%.5f° N", coord.latitude))
+                                .font(.system(size: 14, weight: .bold, design: .monospaced))
+                                .foregroundStyle(DesignTokens.textPrimary)
+                                .lineLimit(1)
+                                .fixedSize(horizontal: true, vertical: false)
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+
+                        Rectangle()
+                            .fill(DesignTokens.borderHairline)
+                            .frame(width: 0.5, height: 28)
+                            .padding(.horizontal, DesignTokens.space8)
+
+                        // Longitude Column
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("LONGITUDE")
+                                .font(.system(size: 9, weight: .heavy, design: .monospaced))
+                                .foregroundStyle(DesignTokens.textTertiary)
+
+                            Text(String(format: "%.5f° W", abs(coord.longitude)))
+                                .font(.system(size: 14, weight: .bold, design: .monospaced))
+                                .foregroundStyle(DesignTokens.textPrimary)
+                                .lineLimit(1)
+                                .fixedSize(horizontal: true, vertical: false)
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    }
                 }
-                .padding(DesignTokens.space12)
+                .padding(DesignTokens.space16)
                 .background(
-                    RoundedRectangle(cornerRadius: DesignTokens.radiusInner, style: .continuous)
+                    RoundedRectangle(cornerRadius: DesignTokens.radiusCard, style: .continuous)
                         .fill(DesignTokens.surfaceSecondary)
                         .overlay(
-                            RoundedRectangle(cornerRadius: DesignTokens.radiusInner, style: .continuous)
+                            RoundedRectangle(cornerRadius: DesignTokens.radiusCard, style: .continuous)
                                 .stroke(DesignTokens.borderHairline, lineWidth: 0.5)
                         )
                 )
