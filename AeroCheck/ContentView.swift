@@ -8,6 +8,12 @@
 import SwiftUI
 import CoreLocation
 
+/// Primary Flight Dashboard conforming to Apple Human Interface Guidelines:
+/// - Semantic typography (Headline, Subheadline, Footnote)
+/// - Flat surfaces with precise 1pt hairline borders (zero floating gradients or glowing shadows)
+/// - Single dominant interactive accent (aviation cobalt)
+/// - Strict 8pt layout rhythm and 44x44pt minimum touch targets
+/// - Explicit micro-interactions on all controls
 struct ContentView: View {
     @State private var viewModel = FlightDashboardViewModel()
 
@@ -15,8 +21,8 @@ struct ContentView: View {
         NavigationStack {
             ZStack(alignment: .bottom) {
                 ScrollView {
-                    VStack(spacing: DesignTokens.spaceM) {
-                        // Top Flight Header: Location & Drone Selector Pill
+                    VStack(spacing: DesignTokens.space16) {
+                        // Top Flight Header: Location & Drone Selector Pills
                         flightHeaderView
 
                         // 1. Hero Go / Caution / No-Go Verdict Banner
@@ -47,43 +53,46 @@ struct ContentView: View {
                             thrustLossPercent: viewModel.riskResult?.thrustEfficiencyLossPercent
                         )
 
-                        // Padding for sticky bottom CTA
+                        // Bottom clearance for persistent action button
                         Color.clear.frame(height: 72)
                     }
-                    .padding(.horizontal, DesignTokens.spaceM)
-                    .padding(.top, DesignTokens.spaceS)
+                    .padding(.horizontal, DesignTokens.space16)
+                    .padding(.top, DesignTokens.space8)
                 }
                 .refreshable {
                     await viewModel.refreshData()
                 }
 
-                // Sticky Bottom Action Bar
+                // Persistent Bottom Action Bar
                 bottomActionBar
             }
-            .background(DesignTokens.canvasBackground.ignoresSafeArea())
+            .background(DesignTokens.surfacePrimary.ignoresSafeArea())
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    HStack(spacing: 6) {
+                    HStack(spacing: DesignTokens.space8) {
                         Image(systemName: "airplane.circle.fill")
-                            .font(.system(size: 20))
-                            .foregroundStyle(DesignTokens.aeroBlue)
+                            .font(.title3)
+                            .foregroundStyle(DesignTokens.accent)
+
                         Text("AeroCheck")
-                            .font(.system(size: 17, weight: .black, design: .monospaced))
+                            .font(.headline.weight(.bold))
                             .foregroundStyle(DesignTokens.textPrimary)
                     }
                 }
 
                 ToolbarItem(placement: .topBarTrailing) {
-                    HStack(spacing: DesignTokens.spaceS) {
+                    HStack(spacing: DesignTokens.space8) {
                         Button {
                             viewModel.showCoordinateSheet = true
                         } label: {
                             Image(systemName: "slider.horizontal.3")
-                                .font(.system(size: 15, weight: .bold))
+                                .font(.footnote.weight(.semibold))
                                 .foregroundStyle(DesignTokens.textSecondary)
-                                .frame(minWidth: 44, minHeight: 44)
+                                .frame(width: 44, height: 44)
+                                .contentShape(Rectangle())
                         }
+                        .buttonStyle(.interactivePress)
 
                         Button {
                             Task {
@@ -91,10 +100,12 @@ struct ContentView: View {
                             }
                         } label: {
                             Image(systemName: "arrow.clockwise")
-                                .font(.system(size: 15, weight: .bold))
-                                .foregroundStyle(DesignTokens.aeroBlue)
-                                .frame(minWidth: 44, minHeight: 44)
+                                .font(.footnote.weight(.semibold))
+                                .foregroundStyle(DesignTokens.accent)
+                                .frame(width: 44, height: 44)
+                                .contentShape(Rectangle())
                         }
+                        .buttonStyle(.interactivePress)
                     }
                 }
             }
@@ -135,7 +146,6 @@ struct ContentView: View {
             }
             .task {
                 viewModel.onAppear()
-                // Initial data load when location is established
                 try? await Task.sleep(nanoseconds: 600_000_000)
                 await viewModel.refreshData()
             }
@@ -145,100 +155,103 @@ struct ContentView: View {
     // MARK: - Subviews
 
     private var flightHeaderView: some View {
-        HStack(alignment: .center, spacing: DesignTokens.spaceS) {
-            // Location Badge
+        HStack(alignment: .center, spacing: DesignTokens.space8) {
+            // Location Badge with 44pt tap target
             Button {
                 viewModel.showCoordinateSheet = true
             } label: {
-                HStack(spacing: 5) {
+                HStack(spacing: DesignTokens.space4) {
                     Image(systemName: "mappin.and.ellipse")
-                        .font(.system(size: 12))
-                        .foregroundStyle(DesignTokens.aeroBlue)
+                        .font(.caption)
+                        .foregroundStyle(DesignTokens.accent)
 
                     Text(viewModel.locationManager.placemarkName)
-                        .font(.system(size: 12, weight: .semibold))
+                        .font(.subheadline.weight(.medium))
                         .foregroundStyle(DesignTokens.textPrimary)
                         .lineLimit(1)
 
                     Image(systemName: "chevron.down")
-                        .font(.system(size: 9))
-                        .foregroundStyle(DesignTokens.textMuted)
+                        .font(.caption2)
+                        .foregroundStyle(DesignTokens.textTertiary)
                 }
-                .padding(.horizontal, 10)
-                .padding(.vertical, 7)
+                .padding(.horizontal, DesignTokens.space12)
+                .frame(minHeight: 44)
                 .background(
-                    Capsule()
-                        .fill(DesignTokens.cardBackground)
-                        .overlay(Capsule().stroke(DesignTokens.cardBorder, lineWidth: 1))
+                    RoundedRectangle(cornerRadius: DesignTokens.radiusInner, style: .continuous)
+                        .fill(DesignTokens.surfaceSecondary)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: DesignTokens.radiusInner, style: .continuous)
+                                .stroke(DesignTokens.borderHairline, lineWidth: 1)
+                        )
                 )
+                .contentShape(Rectangle())
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.interactivePress)
 
             Spacer()
 
-            // Drone Profile Pill
+            // Drone Fleet Selector Pill with 44pt tap target
             Button {
                 viewModel.showDronePickerSheet = true
             } label: {
-                HStack(spacing: 5) {
+                HStack(spacing: DesignTokens.space4) {
                     Image(systemName: "airplane")
-                        .font(.system(size: 11, weight: .bold))
-                        .foregroundStyle(DesignTokens.aeroBlue)
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(DesignTokens.accent)
 
                     Text(viewModel.selectedDrone.name)
-                        .font(.system(size: 12, weight: .bold))
+                        .font(.subheadline.weight(.semibold))
                         .foregroundStyle(DesignTokens.textPrimary)
                         .lineLimit(1)
 
                     Image(systemName: "chevron.right")
-                        .font(.system(size: 9))
-                        .foregroundStyle(DesignTokens.textMuted)
+                        .font(.caption2)
+                        .foregroundStyle(DesignTokens.textTertiary)
                 }
-                .padding(.horizontal, 10)
-                .padding(.vertical, 7)
+                .padding(.horizontal, DesignTokens.space12)
+                .frame(minHeight: 44)
                 .background(
-                    Capsule()
-                        .fill(DesignTokens.cardBackground)
-                        .overlay(Capsule().stroke(DesignTokens.cardBorder, lineWidth: 1))
+                    RoundedRectangle(cornerRadius: DesignTokens.radiusInner, style: .continuous)
+                        .fill(DesignTokens.surfaceSecondary)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: DesignTokens.radiusInner, style: .continuous)
+                                .stroke(DesignTokens.borderHairline, lineWidth: 1)
+                        )
                 )
+                .contentShape(Rectangle())
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.interactivePress)
         }
     }
 
     private var bottomActionBar: some View {
         VStack(spacing: 0) {
-            LinearGradient(
-                colors: [DesignTokens.canvasBackground.opacity(0), DesignTokens.canvasBackground],
-                startPoint: .top,
-                endPoint: .bottom
-            )
-            .frame(height: 18)
+            Divider()
+                .background(DesignTokens.borderHairline)
 
-            HStack(spacing: DesignTokens.spaceM) {
+            HStack(spacing: DesignTokens.space16) {
                 Button {
                     viewModel.showChecklistSheet = true
                 } label: {
-                    HStack(spacing: DesignTokens.spaceS) {
+                    HStack(spacing: DesignTokens.space8) {
                         Image(systemName: "checklist.checked")
-                            .font(.system(size: 16, weight: .bold))
-                        Text("Pre-Flight Check & PDF Sign-Off")
-                            .font(.system(size: 15, weight: .bold))
+                            .font(.subheadline.weight(.semibold))
+                        Text("Pre-Flight Verification & Sign-Off")
+                            .font(.headline)
                     }
-                    .foregroundStyle(.black)
+                    .foregroundStyle(.white)
                     .frame(maxWidth: .infinity)
-                    .frame(minHeight: 50)
+                    .frame(minHeight: 48)
                     .background(
-                        RoundedRectangle(cornerRadius: DesignTokens.radiusM)
-                            .fill(DesignTokens.aeroBlue)
-                            .shadow(color: DesignTokens.aeroBlue.opacity(0.3), radius: 8, y: 3)
+                        RoundedRectangle(cornerRadius: DesignTokens.radiusInner, style: .continuous)
+                            .fill(DesignTokens.accent)
                     )
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.interactivePress)
             }
-            .padding(.horizontal, DesignTokens.spaceM)
-            .padding(.bottom, DesignTokens.spaceM)
-            .background(DesignTokens.canvasBackground)
+            .padding(.horizontal, DesignTokens.space16)
+            .padding(.vertical, DesignTokens.space12)
+            .background(DesignTokens.surfacePrimary)
         }
     }
 }

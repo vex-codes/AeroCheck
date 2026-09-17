@@ -7,7 +7,10 @@
 
 import SwiftUI
 
-/// Airspace classification and UASFM authorization card with direct LAANC deep link integration.
+/// Airspace classification & UASFM ceiling card adhering to Apple Human Interface Guidelines:
+/// - Semantic typography (Headline, Subheadline, Footnote, Monospaced Caption)
+/// - Controlled, purposeful status accents (safe / caution / alert)
+/// - 44pt minimum touch target on LAANC trigger with active press feedback
 public struct AirspaceCardView: View {
     public let airspace: AirspaceEvaluation?
     public let onOpenLAANC: () -> Void
@@ -23,125 +26,135 @@ public struct AirspaceCardView: View {
 
     private var badgeColor: Color {
         if airspace?.isZeroCeiling == true {
-            return DesignTokens.verdictNoGo
+            return DesignTokens.statusAlert
         } else if airspace?.requiresLAANC == true {
-            return DesignTokens.verdictCaution
+            return DesignTokens.statusCaution
         } else {
-            return DesignTokens.verdictSafe
+            return DesignTokens.statusSafe
+        }
+    }
+
+    private var badgeMuted: Color {
+        if airspace?.isZeroCeiling == true {
+            return DesignTokens.statusAlertMuted
+        } else if airspace?.requiresLAANC == true {
+            return DesignTokens.statusCautionMuted
+        } else {
+            return DesignTokens.statusSafeMuted
         }
     }
 
     public var body: some View {
-        VStack(alignment: .leading, spacing: DesignTokens.spaceM) {
-            // Header row with Airspace Badge
+        VStack(alignment: .leading, spacing: DesignTokens.space12) {
+            // Header Row with Airspace Badge
             HStack {
                 Label {
                     Text("AIRSPACE & UASFM AUTHORIZATION")
-                        .font(.system(size: 11, weight: .bold, design: .monospaced))
-                        .foregroundStyle(DesignTokens.textMuted)
+                        .font(.caption.weight(.bold).monospaced())
+                        .foregroundStyle(DesignTokens.textTertiary)
                 } icon: {
                     Image(systemName: "shield.checkered")
-                        .font(.system(size: 11))
-                        .foregroundStyle(DesignTokens.aeroBlue)
+                        .font(.caption)
+                        .foregroundStyle(DesignTokens.accent)
                 }
 
                 Spacer()
 
-                // Classification Badge
+                // Classification Pill
                 Text(airspaceClass.badgeLabel)
-                    .font(.system(size: 11, weight: .black, design: .monospaced))
+                    .font(.caption2.weight(.bold).monospaced())
                     .foregroundStyle(badgeColor)
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 4)
+                    .padding(.horizontal, DesignTokens.space8)
+                    .padding(.vertical, DesignTokens.space4)
                     .background(
-                        Capsule()
-                            .fill(badgeColor.opacity(0.15))
-                            .overlay(Capsule().stroke(badgeColor.opacity(0.4), lineWidth: 1))
+                        Capsule().fill(badgeMuted)
                     )
             }
 
-            // Facility and Ceiling Grid row
-            HStack(alignment: .top, spacing: DesignTokens.spaceM) {
-                VStack(alignment: .leading, spacing: DesignTokens.spaceXS) {
-                    Text("FACILITY / JURISDICTION")
-                        .font(.system(size: 10, weight: .bold, design: .monospaced))
-                        .foregroundStyle(DesignTokens.textMuted)
+            // Facility and Ceiling Grid Row
+            HStack(alignment: .top, spacing: DesignTokens.space16) {
+                VStack(alignment: .leading, spacing: DesignTokens.space4) {
+                    Text("FACILITY")
+                        .font(.caption2.weight(.semibold).monospaced())
+                        .foregroundStyle(DesignTokens.textTertiary)
 
                     Text(airspace?.facilityName ?? "Class G Uncontrolled Area")
-                        .font(.system(size: 15, weight: .bold))
+                        .font(.headline)
                         .foregroundStyle(DesignTokens.textPrimary)
                         .lineLimit(1)
                 }
 
                 Spacer()
 
-                VStack(alignment: .trailing, spacing: DesignTokens.spaceXS) {
-                    Text("UASFM MAX CEILING")
-                        .font(.system(size: 10, weight: .bold, design: .monospaced))
-                        .foregroundStyle(DesignTokens.textMuted)
+                VStack(alignment: .trailing, spacing: DesignTokens.space4) {
+                    Text("UASFM CEILING")
+                        .font(.caption2.weight(.semibold).monospaced())
+                        .foregroundStyle(DesignTokens.textTertiary)
 
                     if let ceiling = airspace?.uasfmCeilingFeet {
                         HStack(alignment: .firstTextBaseline, spacing: 2) {
                             Text("\(ceiling)")
-                                .font(.system(size: 20, weight: .heavy, design: .monospaced))
-                                .foregroundStyle(ceiling == 0 ? DesignTokens.verdictNoGo : DesignTokens.textPrimary)
+                                .font(.title3.weight(.bold).monospaced())
+                                .foregroundStyle(ceiling == 0 ? DesignTokens.statusAlert : DesignTokens.textPrimary)
                             Text("ft AGL")
-                                .font(.system(size: 11, weight: .semibold))
+                                .font(.caption.weight(.medium))
                                 .foregroundStyle(DesignTokens.textSecondary)
                         }
                     } else {
-                        Text("400 ft (Open)")
-                            .font(.system(size: 14, weight: .bold))
-                            .foregroundStyle(DesignTokens.verdictSafe)
+                        Text("400 ft AGL")
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundStyle(DesignTokens.statusSafe)
                     }
                 }
             }
 
-            // Regulatory note
+            // Regulatory Note
             if let note = airspace?.regulatoryNote {
-                HStack(spacing: DesignTokens.spaceS) {
+                HStack(alignment: .top, spacing: DesignTokens.space8) {
                     Image(systemName: "info.circle")
-                        .font(.system(size: 12))
-                        .foregroundStyle(DesignTokens.textMuted)
+                        .font(.caption)
+                        .foregroundStyle(DesignTokens.textTertiary)
+                        .padding(.top, 1)
 
                     Text(note)
-                        .font(.system(size: 12, weight: .regular))
+                        .font(.footnote)
                         .foregroundStyle(DesignTokens.textSecondary)
+                        .lineSpacing(2)
                 }
-                .padding(.vertical, 2)
+                .padding(.vertical, DesignTokens.space4)
             }
 
-            // LAANC Action Button (if controlled airspace)
+            // LAANC Action Button
             if airspace?.requiresLAANC == true {
                 Button(action: onOpenLAANC) {
-                    HStack(spacing: DesignTokens.spaceS) {
-                        Image(systemName: "arrow.up.right.square.fill")
-                            .font(.system(size: 16))
-                        Text(airspace?.isZeroCeiling == true ? "File Advanced Waiver via LAANC App" : "Request Instant LAANC Authorization")
-                            .font(.system(size: 13, weight: .bold))
+                    HStack(spacing: DesignTokens.space8) {
+                        Image(systemName: "arrow.up.right.square")
+                            .font(.subheadline.weight(.semibold))
+                        Text(airspace?.isZeroCeiling == true ? "File Advanced Waiver (0 ft Grid)" : "Request Instant LAANC Authorization")
+                            .font(.subheadline.weight(.semibold))
                     }
                     .foregroundStyle(.white)
                     .frame(maxWidth: .infinity)
                     .frame(minHeight: 44)
                     .background(
-                        RoundedRectangle(cornerRadius: DesignTokens.radiusS)
-                            .fill(airspace?.isZeroCeiling == true ? DesignTokens.cardBackgroundSecondary : DesignTokens.skyBlue)
+                        RoundedRectangle(cornerRadius: DesignTokens.radiusInner, style: .continuous)
+                            .fill(airspace?.isZeroCeiling == true ? DesignTokens.surfaceTertiary : DesignTokens.accent)
                             .overlay(
-                                RoundedRectangle(cornerRadius: DesignTokens.radiusS)
-                                    .stroke(airspace?.isZeroCeiling == true ? DesignTokens.verdictNoGo.opacity(0.6) : Color.clear, lineWidth: 1)
+                                RoundedRectangle(cornerRadius: DesignTokens.radiusInner, style: .continuous)
+                                    .stroke(airspace?.isZeroCeiling == true ? DesignTokens.statusAlert.opacity(0.4) : Color.clear, lineWidth: 1)
                             )
                     )
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(.interactivePress)
             }
         }
-        .padding(DesignTokens.spaceM)
+        .padding(DesignTokens.space16)
         .background(
-            RoundedRectangle(cornerRadius: DesignTokens.radiusM)
-                .fill(DesignTokens.cardBackground)
+            RoundedRectangle(cornerRadius: DesignTokens.radiusCard, style: .continuous)
+                .fill(DesignTokens.surfaceSecondary)
                 .overlay(
-                    RoundedRectangle(cornerRadius: DesignTokens.radiusM)
-                        .stroke(DesignTokens.cardBorder, lineWidth: 1)
+                    RoundedRectangle(cornerRadius: DesignTokens.radiusCard, style: .continuous)
+                        .stroke(DesignTokens.borderHairline, lineWidth: 1)
                 )
         )
     }

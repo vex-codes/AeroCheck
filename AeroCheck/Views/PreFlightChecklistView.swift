@@ -7,7 +7,11 @@
 
 import SwiftUI
 
-/// FAA Part 107.49 Pre-Flight Inspection & Legal Sign-off modal.
+/// FAA Part 107.49 Pre-Flight Inspection & Pilot Verification modal adhering to Apple HIG:
+/// - Semantic typography (Title3, Headline, Subheadline, Footnote, Monospaced Caption)
+/// - Flat card surfaces with precise hairline borders (zero floating gradients or heavy shadows)
+/// - Single dominant interactive accent with 44x44pt minimum touch targets
+/// - Native tactile button press feedback
 public struct PreFlightChecklistView: View {
     @Environment(\.dismiss) private var dismiss
 
@@ -29,147 +33,154 @@ public struct PreFlightChecklistView: View {
     public var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(alignment: .leading, spacing: DesignTokens.spaceM) {
+                VStack(alignment: .leading, spacing: DesignTokens.space16) {
                     // Header Description
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("14 CFR § 107.49 COMPLIANCE CHECKLIST")
-                            .font(.system(size: 11, weight: .bold, design: .monospaced))
-                            .foregroundStyle(DesignTokens.aeroBlue)
+                    VStack(alignment: .leading, spacing: DesignTokens.space4) {
+                        Text("14 CFR § 107.49 COMPLIANCE")
+                            .font(.caption2.weight(.bold).monospaced())
+                            .foregroundStyle(DesignTokens.accent)
 
-                        Text("Pre-Flight Inspection & Pilot Verification")
-                            .font(.system(size: 18, weight: .bold))
+                        Text("Pre-Flight Inspection & Sign-Off")
+                            .font(.title3.weight(.bold))
                             .foregroundStyle(DesignTokens.textPrimary)
 
-                        Text("Before flight, the remote pilot in command must verify that each required condition is satisfied and sign off on safe airframe airworthiness.")
-                            .font(.system(size: 13, weight: .regular))
+                        Text("Verify all conditions prior to flight. Completed inspection record will be embedded in the official PDF audit log.")
+                            .font(.footnote)
                             .foregroundStyle(DesignTokens.textSecondary)
                     }
-                    .padding(.bottom, DesignTokens.spaceXS)
+                    .padding(.bottom, DesignTokens.space4)
 
                     // Checklist items
-                    VStack(spacing: DesignTokens.spaceS) {
+                    VStack(spacing: DesignTokens.space8) {
                         ForEach($record.checklistItems) { $item in
                             Button {
                                 item.isCompleted.toggle()
                             } label: {
-                                HStack(alignment: .top, spacing: DesignTokens.spaceM) {
+                                HStack(alignment: .top, spacing: DesignTokens.space12) {
                                     Image(systemName: item.isCompleted ? "checkmark.square.fill" : "square")
-                                        .font(.system(size: 22, weight: .semibold))
-                                        .foregroundStyle(item.isCompleted ? DesignTokens.verdictSafe : DesignTokens.textMuted)
-                                        .frame(width: 32, height: 32)
+                                        .font(.title3)
+                                        .foregroundStyle(item.isCompleted ? DesignTokens.statusSafe : DesignTokens.textTertiary)
+                                        .frame(width: 24, height: 24)
 
-                                    VStack(alignment: .leading, spacing: 2) {
+                                    VStack(alignment: .leading, spacing: DesignTokens.space4) {
                                         Text(item.title)
-                                            .font(.system(size: 14, weight: .bold))
+                                            .font(.subheadline.weight(.semibold))
                                             .foregroundStyle(DesignTokens.textPrimary)
 
                                         Text(item.regulatorySubtitle)
-                                            .font(.system(size: 12, weight: .regular))
+                                            .font(.footnote)
                                             .foregroundStyle(DesignTokens.textSecondary)
+                                            .lineSpacing(2)
                                     }
 
                                     Spacer()
                                 }
-                                .padding(DesignTokens.spaceM)
+                                .padding(DesignTokens.space16)
+                                .frame(minHeight: 54)
                                 .background(
-                                    RoundedRectangle(cornerRadius: DesignTokens.radiusM)
-                                        .fill(DesignTokens.cardBackground)
+                                    RoundedRectangle(cornerRadius: DesignTokens.radiusCard, style: .continuous)
+                                        .fill(DesignTokens.surfaceSecondary)
                                         .overlay(
-                                            RoundedRectangle(cornerRadius: DesignTokens.radiusM)
-                                                .stroke(item.isCompleted ? DesignTokens.verdictSafe.opacity(0.4) : DesignTokens.cardBorder, lineWidth: 1)
+                                            RoundedRectangle(cornerRadius: DesignTokens.radiusCard, style: .continuous)
+                                                .stroke(item.isCompleted ? DesignTokens.statusSafe.opacity(0.35) : DesignTokens.borderHairline, lineWidth: 1)
                                         )
                                 )
+                                .contentShape(Rectangle())
                             }
-                            .buttonStyle(.plain)
+                            .buttonStyle(.interactivePress)
                         }
                     }
 
                     // Pilot Credentials Form
-                    VStack(alignment: .leading, spacing: DesignTokens.spaceM) {
-                        Text("REMOTE PILOT IN COMMAND (PIC) CREDENTIALS")
-                            .font(.system(size: 11, weight: .bold, design: .monospaced))
-                            .foregroundStyle(DesignTokens.textMuted)
+                    VStack(alignment: .leading, spacing: DesignTokens.space12) {
+                        Text("REMOTE PILOT IN COMMAND (PIC)")
+                            .font(.caption2.weight(.semibold).monospaced())
+                            .foregroundStyle(DesignTokens.textTertiary)
 
-                        VStack(alignment: .leading, spacing: 4) {
+                        VStack(alignment: .leading, spacing: DesignTokens.space4) {
                             Text("Full Legal Name")
-                                .font(.system(size: 11, weight: .medium))
+                                .font(.caption.weight(.medium))
                                 .foregroundStyle(DesignTokens.textSecondary)
                             TextField("e.g. Johnathan Doe", text: $record.pilotName)
+                                .font(.body)
                                 .textFieldStyle(.plain)
-                                .padding(DesignTokens.spaceS)
-                                .background(DesignTokens.cardBackgroundSecondary)
-                                .clipShape(RoundedRectangle(cornerRadius: DesignTokens.radiusS))
+                                .padding(DesignTokens.space12)
+                                .background(DesignTokens.surfaceTertiary)
+                                .clipShape(RoundedRectangle(cornerRadius: DesignTokens.radiusInner, style: .continuous))
                                 .foregroundStyle(DesignTokens.textPrimary)
                         }
 
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text("FAA Remote Pilot Certificate #")
-                                .font(.system(size: 11, weight: .medium))
+                        VStack(alignment: .leading, spacing: DesignTokens.space4) {
+                            Text("FAA Remote Pilot Certificate Number")
+                                .font(.caption.weight(.medium))
                                 .foregroundStyle(DesignTokens.textSecondary)
                             TextField("e.g. 4819204", text: $record.remotePilotCertificateNumber)
+                                .font(.body)
                                 .textFieldStyle(.plain)
-                                .padding(DesignTokens.spaceS)
-                                .background(DesignTokens.cardBackgroundSecondary)
-                                .clipShape(RoundedRectangle(cornerRadius: DesignTokens.radiusS))
+                                .padding(DesignTokens.space12)
+                                .background(DesignTokens.surfaceTertiary)
+                                .clipShape(RoundedRectangle(cornerRadius: DesignTokens.radiusInner, style: .continuous))
                                 .foregroundStyle(DesignTokens.textPrimary)
                         }
 
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text("Mission Purpose / Operation Description")
-                                .font(.system(size: 11, weight: .medium))
+                        VStack(alignment: .leading, spacing: DesignTokens.space4) {
+                            Text("Mission Purpose")
+                                .font(.caption.weight(.medium))
                                 .foregroundStyle(DesignTokens.textSecondary)
-                            TextField("e.g. Commercial Roof Survey & Video", text: $record.missionPurpose)
+                            TextField("e.g. Commercial Roof Survey", text: $record.missionPurpose)
+                                .font(.body)
                                 .textFieldStyle(.plain)
-                                .padding(DesignTokens.spaceS)
-                                .background(DesignTokens.cardBackgroundSecondary)
-                                .clipShape(RoundedRectangle(cornerRadius: DesignTokens.radiusS))
+                                .padding(DesignTokens.space12)
+                                .background(DesignTokens.surfaceTertiary)
+                                .clipShape(RoundedRectangle(cornerRadius: DesignTokens.radiusInner, style: .continuous))
                                 .foregroundStyle(DesignTokens.textPrimary)
                         }
                     }
-                    .padding(DesignTokens.spaceM)
+                    .padding(DesignTokens.space16)
                     .background(
-                        RoundedRectangle(cornerRadius: DesignTokens.radiusM)
-                            .fill(DesignTokens.cardBackground)
+                        RoundedRectangle(cornerRadius: DesignTokens.radiusCard, style: .continuous)
+                            .fill(DesignTokens.surfaceSecondary)
                             .overlay(
-                                RoundedRectangle(cornerRadius: DesignTokens.radiusM)
-                                    .stroke(DesignTokens.cardBorder, lineWidth: 1)
+                                RoundedRectangle(cornerRadius: DesignTokens.radiusCard, style: .continuous)
+                                    .stroke(DesignTokens.borderHairline, lineWidth: 1)
                             )
                     )
 
                     // Digital Signature Canvas
-                    VStack(alignment: .leading, spacing: DesignTokens.spaceS) {
+                    VStack(alignment: .leading, spacing: DesignTokens.space8) {
                         HStack {
                             Text("DIGITAL SIGNATURE TRACE")
-                                .font(.system(size: 11, weight: .bold, design: .monospaced))
-                                .foregroundStyle(DesignTokens.textMuted)
+                                .font(.caption2.weight(.semibold).monospaced())
+                                .foregroundStyle(DesignTokens.textTertiary)
 
                             Spacer()
 
                             if !drawnPaths.isEmpty {
-                                Button("Clear Signature") {
+                                Button("Clear") {
                                     drawnPaths.removeAll()
                                     currentDrawingPath = Path()
                                     record.signatureImageData = nil
                                 }
-                                .font(.system(size: 12, weight: .semibold))
-                                .foregroundStyle(DesignTokens.verdictNoGo)
+                                .font(.footnote.weight(.semibold))
+                                .foregroundStyle(DesignTokens.statusAlert)
+                                .frame(minWidth: 44, minHeight: 44)
+                                .contentShape(Rectangle())
                             }
                         }
 
                         ZStack {
-                            RoundedRectangle(cornerRadius: DesignTokens.radiusS)
-                                .fill(DesignTokens.cardBackgroundSecondary)
+                            RoundedRectangle(cornerRadius: DesignTokens.radiusInner, style: .continuous)
+                                .fill(DesignTokens.surfaceTertiary)
                                 .overlay(
-                                    RoundedRectangle(cornerRadius: DesignTokens.radiusS)
-                                        .stroke(DesignTokens.cardBorder, lineWidth: 1)
+                                    RoundedRectangle(cornerRadius: DesignTokens.radiusInner, style: .continuous)
+                                        .stroke(DesignTokens.borderHairline, lineWidth: 1)
                                 )
 
-                            // Signature Canvas View
                             Canvas { context, _ in
                                 for path in drawnPaths {
-                                    context.stroke(path, with: .color(DesignTokens.textPrimary), lineWidth: 2.5)
+                                    context.stroke(path, with: .color(DesignTokens.textPrimary), lineWidth: 2)
                                 }
-                                context.stroke(currentDrawingPath, with: .color(DesignTokens.textPrimary), lineWidth: 2.5)
+                                context.stroke(currentDrawingPath, with: .color(DesignTokens.textPrimary), lineWidth: 2)
                             }
                             .gesture(
                                 DragGesture(minimumDistance: 0.1)
@@ -190,57 +201,59 @@ public struct PreFlightChecklistView: View {
 
                             if drawnPaths.isEmpty && currentDrawingPath.isEmpty {
                                 Text("Sign with finger or stylus here")
-                                    .font(.system(size: 13, weight: .regular))
-                                    .foregroundStyle(DesignTokens.textMuted)
+                                    .font(.footnote)
+                                    .foregroundStyle(DesignTokens.textTertiary)
                             }
                         }
-                        .frame(height: 120)
+                        .frame(height: 110)
                     }
-                    .padding(DesignTokens.spaceM)
+                    .padding(DesignTokens.space16)
                     .background(
-                        RoundedRectangle(cornerRadius: DesignTokens.radiusM)
-                            .fill(DesignTokens.cardBackground)
+                        RoundedRectangle(cornerRadius: DesignTokens.radiusCard, style: .continuous)
+                            .fill(DesignTokens.surfaceSecondary)
                             .overlay(
-                                RoundedRectangle(cornerRadius: DesignTokens.radiusM)
-                                    .stroke(DesignTokens.cardBorder, lineWidth: 1)
+                                RoundedRectangle(cornerRadius: DesignTokens.radiusCard, style: .continuous)
+                                    .stroke(DesignTokens.borderHairline, lineWidth: 1)
                             )
                     )
 
+                    // Validation Warning
                     if let warning = validationWarning {
-                        HStack(spacing: DesignTokens.spaceS) {
+                        HStack(spacing: DesignTokens.space8) {
                             Image(systemName: "exclamationmark.triangle.fill")
-                                .foregroundStyle(DesignTokens.verdictCaution)
+                                .font(.footnote)
+                                .foregroundStyle(DesignTokens.statusCaution)
                             Text(warning)
-                                .font(.system(size: 12, weight: .medium))
-                                .foregroundStyle(DesignTokens.verdictCaution)
+                                .font(.footnote.weight(.medium))
+                                .foregroundStyle(DesignTokens.statusCaution)
                         }
-                        .padding(.horizontal, DesignTokens.spaceS)
+                        .padding(.horizontal, DesignTokens.space8)
                     }
 
-                    // Complete & Export PDF Action
+                    // Primary Submit Button with 44pt+ height & press feedback
                     Button {
                         validateAndSubmit()
                     } label: {
-                        HStack(spacing: DesignTokens.spaceS) {
+                        HStack(spacing: DesignTokens.space8) {
                             Image(systemName: "doc.badge.arrow.up.fill")
-                                .font(.system(size: 16))
+                                .font(.subheadline)
                             Text("Sign & Generate Audit PDF")
-                                .font(.system(size: 15, weight: .bold))
+                                .font(.headline)
                         }
-                        .foregroundStyle(.black)
+                        .foregroundStyle(.white)
                         .frame(maxWidth: .infinity)
-                        .frame(minHeight: 50)
+                        .frame(minHeight: 48)
                         .background(
-                            RoundedRectangle(cornerRadius: DesignTokens.radiusM)
-                                .fill(DesignTokens.aeroBlue)
+                            RoundedRectangle(cornerRadius: DesignTokens.radiusInner, style: .continuous)
+                                .fill(DesignTokens.accent)
                         )
                     }
-                    .buttonStyle(.plain)
-                    .padding(.top, DesignTokens.spaceS)
+                    .buttonStyle(.interactivePress)
+                    .padding(.top, DesignTokens.space8)
                 }
-                .padding(DesignTokens.spaceM)
+                .padding(DesignTokens.space16)
             }
-            .background(DesignTokens.canvasBackground.ignoresSafeArea())
+            .background(DesignTokens.surfacePrimary.ignoresSafeArea())
             .navigationTitle("Pre-Flight Sign-Off")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -248,6 +261,7 @@ public struct PreFlightChecklistView: View {
                     Button("Cancel") {
                         dismiss()
                     }
+                    .font(.subheadline)
                     .foregroundStyle(DesignTokens.textSecondary)
                 }
             }
@@ -257,7 +271,6 @@ public struct PreFlightChecklistView: View {
     // MARK: - Helpers
 
     private func snapshotSignature() {
-        // Render drawn signature to UIImage Data
         let size = CGSize(width: 250, height: 100)
         let renderer = UIGraphicsImageRenderer(size: size)
         let image = renderer.image { ctx in
@@ -266,7 +279,7 @@ public struct PreFlightChecklistView: View {
             UIColor.black.setStroke()
             for path in drawnPaths {
                 let uiPath = UIBezierPath(cgPath: path.cgPath)
-                uiPath.lineWidth = 2.5
+                uiPath.lineWidth = 2.0
                 uiPath.stroke()
             }
         }
@@ -275,12 +288,12 @@ public struct PreFlightChecklistView: View {
 
     private func validateAndSubmit() {
         guard record.isAllChecked else {
-            validationWarning = "Please verify and complete all 4 mandatory § 107.49 inspection items."
+            validationWarning = "Complete all 4 mandatory § 107.49 inspection items."
             return
         }
 
         guard !record.pilotName.trimmingCharacters(in: .whitespaces).isEmpty else {
-            validationWarning = "Pilot name is required for legal FAA compliance."
+            validationWarning = "Pilot name is required for FAA compliance."
             return
         }
 

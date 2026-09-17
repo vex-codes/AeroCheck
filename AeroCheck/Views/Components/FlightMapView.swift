@@ -8,7 +8,11 @@
 import SwiftUI
 import MapKit
 
-/// Interactive tactical Map card showing drone position, 400ft radius buffer, and airspace boundary markers.
+/// Tactical airspace Map view conforming to human-designed Apple HIG:
+/// - Semantic typography (Subheadline, Caption)
+/// - Flat container with crisp 1pt hairline border (zero floating drop shadows)
+/// - 44x44pt accessible interactive recenter target
+/// - Native Apple MapKit standard styling
 public struct FlightMapView: View {
     public let coordinate: CLLocationCoordinate2D?
     public let airspace: AirspaceEvaluation?
@@ -25,98 +29,101 @@ public struct FlightMapView: View {
     }
 
     public var body: some View {
-        VStack(alignment: .leading, spacing: DesignTokens.spaceS) {
+        VStack(alignment: .leading, spacing: DesignTokens.space12) {
+            // Header Row
             HStack {
                 Label {
                     Text("TACTICAL AIRSPACE MAP")
-                        .font(.system(size: 11, weight: .bold, design: .monospaced))
-                        .foregroundStyle(DesignTokens.textMuted)
+                        .font(.caption.weight(.bold).monospaced())
+                        .foregroundStyle(DesignTokens.textTertiary)
                 } icon: {
                     Image(systemName: "map.fill")
-                        .font(.system(size: 11))
-                        .foregroundStyle(DesignTokens.aeroBlue)
+                        .font(.caption)
+                        .foregroundStyle(DesignTokens.accent)
                 }
 
                 Spacer()
 
                 if let ident = airspace?.airportIdent {
-                    Text("REF: \(ident)")
-                        .font(.system(size: 10, weight: .semibold, design: .monospaced))
-                        .foregroundStyle(DesignTokens.aeroBlue)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 3)
+                    Text(ident)
+                        .font(.caption2.weight(.bold).monospaced())
+                        .foregroundStyle(DesignTokens.accent)
+                        .padding(.horizontal, DesignTokens.space8)
+                        .padding(.vertical, DesignTokens.space4)
                         .background(
-                            Capsule()
-                                .fill(DesignTokens.aeroBlue.opacity(0.12))
+                            Capsule().fill(DesignTokens.accentMuted)
                         )
                 }
             }
 
+            // Tactical Map Container
             ZStack(alignment: .bottomTrailing) {
                 Map(position: $position) {
-                    // Operational 400 ft (~122m) buffer circle around pilot launch point
+                    // Part 107 legal 400 ft (~122m) buffer radius
                     MapCircle(center: activeCoordinate, radius: 122)
-                        .foregroundStyle(DesignTokens.aeroBlue.opacity(0.15))
-                        .stroke(DesignTokens.aeroBlue, lineWidth: 1.5)
+                        .foregroundStyle(DesignTokens.accent.opacity(0.12))
+                        .stroke(DesignTokens.accent, lineWidth: 1.5)
 
                     // Drone Pin Annotation
-                    Annotation("Launch Point", coordinate: activeCoordinate) {
+                    Annotation("Launch Site", coordinate: activeCoordinate) {
                         ZStack {
                             Circle()
-                                .fill(DesignTokens.canvasBackground)
-                                .frame(width: 38, height: 38)
-                                .shadow(color: .black.opacity(0.5), radius: 4)
-
-                            Circle()
-                                .stroke(DesignTokens.aeroBlue, lineWidth: 2)
-                                .frame(width: 36, height: 36)
+                                .fill(DesignTokens.surfacePrimary)
+                                .frame(width: 32, height: 32)
+                                .overlay(
+                                    Circle().stroke(DesignTokens.accent, lineWidth: 1.5)
+                                )
 
                             Image(systemName: "airplane")
-                                .font(.system(size: 16, weight: .bold))
-                                .foregroundStyle(DesignTokens.aeroBlue)
+                                .font(.caption.weight(.bold))
+                                .foregroundStyle(DesignTokens.accent)
                                 .rotationEffect(.degrees(-45))
                         }
                     }
                 }
                 .mapStyle(.hybrid(elevation: .realistic))
-                .frame(height: 190)
-                .clipShape(RoundedRectangle(cornerRadius: DesignTokens.radiusM))
+                .frame(height: 180)
+                .clipShape(RoundedRectangle(cornerRadius: DesignTokens.radiusInner, style: .continuous))
                 .overlay(
-                    RoundedRectangle(cornerRadius: DesignTokens.radiusM)
-                        .stroke(DesignTokens.cardBorder, lineWidth: 1)
+                    RoundedRectangle(cornerRadius: DesignTokens.radiusInner, style: .continuous)
+                        .stroke(DesignTokens.borderHairline, lineWidth: 1)
                 )
 
-                // Recenter Button
+                // Recenter Button with 44x44pt tap target & micro-interaction
                 Button {
-                    withAnimation {
+                    withAnimation(.snappy(duration: 0.3)) {
                         position = .camera(MapCamera(centerCoordinate: activeCoordinate, distance: 1200))
                     }
                 } label: {
                     Image(systemName: "location.fill")
-                        .font(.system(size: 14, weight: .semibold))
+                        .font(.footnote.weight(.semibold))
                         .foregroundStyle(DesignTokens.textPrimary)
                         .frame(width: 44, height: 44)
                         .background(
-                            Circle()
-                                .fill(DesignTokens.cardBackground.opacity(0.9))
-                                .overlay(Circle().stroke(DesignTokens.cardBorder, lineWidth: 1))
+                            RoundedRectangle(cornerRadius: DesignTokens.radiusInner, style: .continuous)
+                                .fill(DesignTokens.surfaceSecondary)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: DesignTokens.radiusInner, style: .continuous)
+                                        .stroke(DesignTokens.borderHairline, lineWidth: 1)
+                                )
                         )
                 }
-                .padding(DesignTokens.spaceS)
+                .buttonStyle(.interactivePress)
+                .padding(DesignTokens.space8)
             }
             .onChange(of: coordinate?.latitude) { _, _ in
-                withAnimation {
+                withAnimation(.snappy(duration: 0.3)) {
                     position = .camera(MapCamera(centerCoordinate: activeCoordinate, distance: 1200))
                 }
             }
         }
-        .padding(DesignTokens.spaceM)
+        .padding(DesignTokens.space16)
         .background(
-            RoundedRectangle(cornerRadius: DesignTokens.radiusM)
-                .fill(DesignTokens.cardBackground)
+            RoundedRectangle(cornerRadius: DesignTokens.radiusCard, style: .continuous)
+                .fill(DesignTokens.surfaceSecondary)
                 .overlay(
-                    RoundedRectangle(cornerRadius: DesignTokens.radiusM)
-                        .stroke(DesignTokens.cardBorder, lineWidth: 1)
+                    RoundedRectangle(cornerRadius: DesignTokens.radiusCard, style: .continuous)
+                        .stroke(DesignTokens.borderHairline, lineWidth: 1)
                 )
         )
     }

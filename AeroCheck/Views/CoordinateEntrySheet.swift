@@ -8,7 +8,10 @@
 import SwiftUI
 import CoreLocation
 
-/// Coordinate manual entry modal for off-site mission planning and location override.
+/// Coordinate manual entry modal for off-site mission planning and location override adhering to Apple HIG:
+/// - Semantic typography (Subheadline, Footnote, Monospaced Caption)
+/// - Flat card surfaces with hairline borders
+/// - 44x44pt minimum touch targets with active press feedback
 public struct CoordinateEntrySheet: View {
     @Environment(\.dismiss) private var dismiss
 
@@ -17,7 +20,6 @@ public struct CoordinateEntrySheet: View {
 
     @State private var latText: String = ""
     @State private var lonText: String = ""
-    @State private var presetName: String = ""
 
     public init(
         currentCoordinate: CLLocationCoordinate2D?,
@@ -43,36 +45,38 @@ public struct CoordinateEntrySheet: View {
     public var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(alignment: .leading, spacing: DesignTokens.spaceM) {
+                VStack(alignment: .leading, spacing: DesignTokens.space16) {
                     Text("MANUAL MISSION COORDINATES")
-                        .font(.system(size: 11, weight: .bold, design: .monospaced))
-                        .foregroundStyle(DesignTokens.textMuted)
+                        .font(.caption2.weight(.semibold).monospaced())
+                        .foregroundStyle(DesignTokens.textTertiary)
 
-                    VStack(spacing: DesignTokens.spaceS) {
-                        HStack(spacing: DesignTokens.spaceS) {
+                    VStack(spacing: DesignTokens.space12) {
+                        HStack(spacing: DesignTokens.space8) {
                             VStack(alignment: .leading, spacing: 2) {
                                 Text("Latitude")
-                                    .font(.system(size: 10, weight: .medium))
+                                    .font(.caption)
                                     .foregroundStyle(DesignTokens.textSecondary)
-                                TextField("e.g. 37.7749", text: $latText)
+                                TextField("37.7749", text: $latText)
                                     .keyboardType(.numbersAndPunctuation)
+                                    .font(.body)
                                     .textFieldStyle(.plain)
-                                    .padding(DesignTokens.spaceS)
-                                    .background(DesignTokens.cardBackgroundSecondary)
-                                    .clipShape(RoundedRectangle(cornerRadius: DesignTokens.radiusS))
+                                    .padding(DesignTokens.space12)
+                                    .background(DesignTokens.surfaceTertiary)
+                                    .clipShape(RoundedRectangle(cornerRadius: DesignTokens.radiusInner, style: .continuous))
                                     .foregroundStyle(DesignTokens.textPrimary)
                             }
 
                             VStack(alignment: .leading, spacing: 2) {
                                 Text("Longitude")
-                                    .font(.system(size: 10, weight: .medium))
+                                    .font(.caption)
                                     .foregroundStyle(DesignTokens.textSecondary)
-                                TextField("e.g. -122.4194", text: $lonText)
+                                TextField("-122.4194", text: $lonText)
                                     .keyboardType(.numbersAndPunctuation)
+                                    .font(.body)
                                     .textFieldStyle(.plain)
-                                    .padding(DesignTokens.spaceS)
-                                    .background(DesignTokens.cardBackgroundSecondary)
-                                    .clipShape(RoundedRectangle(cornerRadius: DesignTokens.radiusS))
+                                    .padding(DesignTokens.space12)
+                                    .background(DesignTokens.surfaceTertiary)
+                                    .clipShape(RoundedRectangle(cornerRadius: DesignTokens.radiusInner, style: .continuous))
                                     .foregroundStyle(DesignTokens.textPrimary)
                             }
                         }
@@ -81,31 +85,31 @@ public struct CoordinateEntrySheet: View {
                             applyManual()
                         } label: {
                             Text("Set Mission Coordinates")
-                                .font(.system(size: 14, weight: .bold))
-                                .foregroundStyle(.black)
+                                .font(.subheadline.weight(.semibold))
+                                .foregroundStyle(.white)
                                 .frame(maxWidth: .infinity)
                                 .frame(minHeight: 44)
-                                .background(DesignTokens.aeroBlue)
-                                .clipShape(RoundedRectangle(cornerRadius: DesignTokens.radiusS))
+                                .background(DesignTokens.accent)
+                                .clipShape(RoundedRectangle(cornerRadius: DesignTokens.radiusInner, style: .continuous))
                         }
-                        .buttonStyle(.plain)
+                        .buttonStyle(.interactivePress)
                     }
-                    .padding(DesignTokens.spaceM)
+                    .padding(DesignTokens.space16)
                     .background(
-                        RoundedRectangle(cornerRadius: DesignTokens.radiusM)
-                            .fill(DesignTokens.cardBackground)
+                        RoundedRectangle(cornerRadius: DesignTokens.radiusCard, style: .continuous)
+                            .fill(DesignTokens.surfaceSecondary)
                             .overlay(
-                                RoundedRectangle(cornerRadius: DesignTokens.radiusM)
-                                    .stroke(DesignTokens.cardBorder, lineWidth: 1)
+                                RoundedRectangle(cornerRadius: DesignTokens.radiusCard, style: .continuous)
+                                    .stroke(DesignTokens.borderHairline, lineWidth: 1)
                             )
                     )
 
-                    // Aviation Presets
-                    Text("TEST & PLANNING PRESETS")
-                        .font(.system(size: 11, weight: .bold, design: .monospaced))
-                        .foregroundStyle(DesignTokens.textMuted)
+                    // Aviation Test Presets
+                    Text("PLANNING & AIRSPACE PRESETS")
+                        .font(.caption2.weight(.semibold).monospaced())
+                        .foregroundStyle(DesignTokens.textTertiary)
 
-                    VStack(spacing: DesignTokens.spaceS) {
+                    VStack(spacing: DesignTokens.space8) {
                         ForEach(quickPresets, id: \.name) { preset in
                             Button {
                                 onSelectCoordinate(preset.lat, preset.lon, preset.name)
@@ -114,42 +118,45 @@ public struct CoordinateEntrySheet: View {
                                 HStack {
                                     VStack(alignment: .leading, spacing: 2) {
                                         Text(preset.name)
-                                            .font(.system(size: 14, weight: .semibold))
+                                            .font(.subheadline.weight(.semibold))
                                             .foregroundStyle(DesignTokens.textPrimary)
 
                                         Text(String(format: "%.4f, %.4f", preset.lat, preset.lon))
-                                            .font(.system(size: 11, weight: .regular, design: .monospaced))
-                                            .foregroundStyle(DesignTokens.textMuted)
+                                            .font(.caption.monospaced())
+                                            .foregroundStyle(DesignTokens.textTertiary)
                                     }
 
                                     Spacer()
 
-                                    Image(systemName: "arrow.right.circle")
-                                        .font(.system(size: 18))
-                                        .foregroundStyle(DesignTokens.aeroBlue)
+                                    Image(systemName: "arrow.right")
+                                        .font(.footnote.weight(.semibold))
+                                        .foregroundStyle(DesignTokens.accent)
                                 }
-                                .padding(DesignTokens.spaceM)
+                                .padding(DesignTokens.space16)
+                                .frame(minHeight: 48)
                                 .background(
-                                    RoundedRectangle(cornerRadius: DesignTokens.radiusM)
-                                        .fill(DesignTokens.cardBackground)
+                                    RoundedRectangle(cornerRadius: DesignTokens.radiusCard, style: .continuous)
+                                        .fill(DesignTokens.surfaceSecondary)
                                         .overlay(
-                                            RoundedRectangle(cornerRadius: DesignTokens.radiusM)
-                                                .stroke(DesignTokens.cardBorder, lineWidth: 1)
+                                            RoundedRectangle(cornerRadius: DesignTokens.radiusCard, style: .continuous)
+                                                .stroke(DesignTokens.borderHairline, lineWidth: 1)
                                         )
                                 )
+                                .contentShape(Rectangle())
                             }
-                            .buttonStyle(.plain)
+                            .buttonStyle(.interactivePress)
                         }
                     }
                 }
-                .padding(DesignTokens.spaceM)
+                .padding(DesignTokens.space16)
             }
-            .background(DesignTokens.canvasBackground.ignoresSafeArea())
-            .navigationTitle("Set Location")
+            .background(DesignTokens.surfacePrimary.ignoresSafeArea())
+            .navigationTitle("Location")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("Cancel") { dismiss() }
+                        .font(.subheadline)
                         .foregroundStyle(DesignTokens.textSecondary)
                 }
             }

@@ -7,39 +7,92 @@
 
 import SwiftUI
 
-/// Standardized design tokens adhering to 8pt grid, dark aviation aesthetic, and anti-slop guidelines.
+/// Semantic design tokens adhering to strict Apple Human Interface Guidelines:
+/// 1. Typography via iOS semantic text styles (Large Title, Title, Headline, Body, Footnote, Caption).
+/// 2. Color defined by role (surfaces, borders, text, single interactive accent).
+/// 3. Strict single depth policy: Flat surfaces with precise 1pt/0.5pt hairline borders.
+/// 4. 4pt/8pt mathematical rhythm and 44x44pt minimum tap targets.
+/// 5. Native micro-interactions and tactile feedback.
 public enum DesignTokens {
-    // MARK: - Color Palette (Dark Aviation System)
-    public static let canvasBackground = Color(hex: "0A0E14")      // Deep aeronautical cockpit black
-    public static let cardBackground = Color(hex: "121820")        // High contrast slate card
-    public static let cardBackgroundSecondary = Color(hex: "1A232E")
-    public static let cardBorder = Color(hex: "233040")            // Subtle metallic border
+    // MARK: - Color by Role
+    public static let surfacePrimary = Color(hex: "090D12")           // Root background
+    public static let surfaceSecondary = Color(hex: "121820")         // Card container
+    public static let surfaceTertiary = Color(hex: "18212B")          // Inset cell / sub-container
+    public static let borderHairline = Color(hex: "222C38")           // Precise separator border
 
-    // Semantic Status Accents
-    public static let verdictSafe = Color(hex: "22C55E")           // Aviation Emerald Green
-    public static let verdictCaution = Color(hex: "F59E0B")        // Aviation Amber Caution
-    public static let verdictNoGo = Color(hex: "EF4444")           // Aviation Red Alert
-    public static let aeroBlue = Color(hex: "38BDF8")              // Flight telemetry cyan
-    public static let skyBlue = Color(hex: "0284C7")
+    // Single cohesive interactive accent (aviation cobalt)
+    public static let accent = Color(hex: "0284C7")
+    public static let accentMuted = Color(hex: "0284C7").opacity(0.14)
 
-    // Typography Neutral Tones
-    public static let textPrimary = Color(hex: "F1F5F9")           // Bright white/silver
-    public static let textSecondary = Color(hex: "94A3B8")         // Neutral slate gray
-    public static let textMuted = Color(hex: "64748B")             // Dark slate
+    // Semantic text hierarchy
+    public static let textPrimary = Color.white
+    public static let textSecondary = Color(hex: "94A3B8")
+    public static let textTertiary = Color(hex: "64748B")
 
-    // MARK: - Spacing Tokens (8pt Grid)
-    public static let spaceXS: CGFloat = 4.0
-    public static let spaceS: CGFloat = 8.0
-    public static let spaceM: CGFloat = 16.0
-    public static let spaceL: CGFloat = 24.0
-    public static let spaceXL: CGFloat = 32.0
+    // Telemetry Status (Reserved strictly for regulatory data alerts, NOT brand accents)
+    public static let statusSafe = Color(hex: "16A34A")
+    public static let statusSafeMuted = Color(hex: "16A34A").opacity(0.12)
+    public static let statusCaution = Color(hex: "D97706")
+    public static let statusCautionMuted = Color(hex: "D97706").opacity(0.12)
+    public static let statusAlert = Color(hex: "DC2626")
+    public static let statusAlertMuted = Color(hex: "DC2626").opacity(0.12)
+
+    // Legacy mapping aliases to preserve safety
+    public static let canvasBackground = surfacePrimary
+    public static let cardBackground = surfaceSecondary
+    public static let cardBackgroundSecondary = surfaceTertiary
+    public static let cardBorder = borderHairline
+    public static let verdictSafe = statusSafe
+    public static let verdictCaution = statusCaution
+    public static let verdictNoGo = statusAlert
+    public static let aeroBlue = accent
+    public static let skyBlue = accent
+    public static let textMuted = textTertiary
+
+    // MARK: - Spacing & Rhythm (Strict 4pt / 8pt Grid)
+    public static let space4: CGFloat = 4.0
+    public static let space8: CGFloat = 8.0
+    public static let space12: CGFloat = 12.0
+    public static let space16: CGFloat = 16.0
+    public static let space20: CGFloat = 20.0
+    public static let space24: CGFloat = 24.0
+    public static let space32: CGFloat = 32.0
+
+    // Legacy aliases
+    public static let spaceXS = space4
+    public static let spaceS = space8
+    public static let spaceM = space16
+    public static let spaceL = space24
+    public static let spaceXL = space32
     public static let spaceXXL: CGFloat = 48.0
 
-    // MARK: - Corner Radii
-    public static let radiusS: CGFloat = 8.0
-    public static let radiusM: CGFloat = 14.0
-    public static let radiusL: CGFloat = 20.0
+    // MARK: - Consistent Corner Radii (Continuous curves)
+    public static let radiusInner: CGFloat = 8.0
+    public static let radiusCard: CGFloat = 12.0
     public static let radiusPill: CGFloat = 999.0
+
+    public static let radiusS = radiusInner
+    public static let radiusM = radiusCard
+    public static let radiusL: CGFloat = 16.0
+}
+
+// MARK: - Micro-Interaction Button Style
+
+public struct InteractivePressButtonStyle: ButtonStyle {
+    public init() {}
+
+    public func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .scaleEffect(configuration.isPressed ? 0.98 : 1.0)
+            .opacity(configuration.isPressed ? 0.88 : 1.0)
+            .animation(.easeOut(duration: 0.15), value: configuration.isPressed)
+    }
+}
+
+extension ButtonStyle where Self == InteractivePressButtonStyle {
+    public static var interactivePress: InteractivePressButtonStyle {
+        InteractivePressButtonStyle()
+    }
 }
 
 // MARK: - Color Hex Initializer
@@ -51,11 +104,11 @@ extension Color {
         Scanner(string: hexCleaned).scanHexInt64(&int)
         let a, r, g, b: UInt64
         switch hexCleaned.count {
-        case 3: // RGB (12-bit)
+        case 3:
             (a, r, g, b) = (255, (int >> 8) * 17, (int >> 4 & 0xF) * 17, (int & 0xF) * 17)
-        case 6: // RGB (24-bit)
+        case 6:
             (a, r, g, b) = (255, int >> 16, int >> 8 & 0xFF, int & 0xFF)
-        case 8: // ARGB (32-bit)
+        case 8:
             (a, r, g, b) = (int >> 24, int >> 16 & 0xFF, int >> 8 & 0xFF, int & 0xFF)
         default:
             (a, r, g, b) = (255, 0, 0, 0)

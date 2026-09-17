@@ -7,7 +7,11 @@
 
 import SwiftUI
 
-/// Primary Go / Caution / No-Go Verdict Banner presenting operational clearance and safety rationale.
+/// Primary Go / Caution / No-Go verdict banner adhering to Apple Human Interface Guidelines:
+/// - Semantic typography (Title, Headline, Subheadline, Footnote)
+/// - Restrained status color accents with calm surfaces
+/// - Flat surface with precise hairline borders
+/// - Strict 8pt spatial rhythm and minimum 44x44pt tap target
 public struct VerdictBannerView: View {
     public let result: RiskAssessmentResult?
     public let isLoading: Bool
@@ -19,103 +23,113 @@ public struct VerdictBannerView: View {
         self.isLoading = isLoading
     }
 
-    private var verdictColor: Color {
-        guard let res = result else { return DesignTokens.aeroBlue }
+    private var statusColor: Color {
+        guard let res = result else { return DesignTokens.accent }
         switch res.overallVerdict {
-        case .safe: return DesignTokens.verdictSafe
-        case .caution: return DesignTokens.verdictCaution
-        case .noGo: return DesignTokens.verdictNoGo
+        case .safe: return DesignTokens.statusSafe
+        case .caution: return DesignTokens.statusCaution
+        case .noGo: return DesignTokens.statusAlert
         }
     }
 
-    private var statusIcon: String {
-        guard let res = result else { return "antenna.radiowaves.left.and.right" }
-        return res.overallVerdict.systemIcon
+    private var statusBadgeMuted: Color {
+        guard let res = result else { return DesignTokens.accentMuted }
+        switch res.overallVerdict {
+        case .safe: return DesignTokens.statusSafeMuted
+        case .caution: return DesignTokens.statusCautionMuted
+        case .noGo: return DesignTokens.statusAlertMuted
+        }
     }
 
     public var body: some View {
-        VStack(alignment: .leading, spacing: DesignTokens.spaceM) {
-            HStack(spacing: DesignTokens.spaceM) {
-                // Status Icon Badge with dynamic pulse
-                ZStack {
+        VStack(alignment: .leading, spacing: DesignTokens.space12) {
+            // Header Bar
+            HStack(alignment: .center, spacing: DesignTokens.space12) {
+                // Status Indicator Pill
+                HStack(spacing: DesignTokens.space8) {
                     Circle()
-                        .fill(verdictColor.opacity(0.18))
-                        .frame(width: 48, height: 48)
+                        .fill(statusColor)
+                        .frame(width: 8, height: 8)
 
-                    Image(systemName: isLoading ? "arrow.triangle.2.circlepath" : statusIcon)
-                        .font(.system(size: 24, weight: .bold))
-                        .foregroundStyle(verdictColor)
-                        .symbolEffect(.pulse, isActive: isLoading)
+                    Text(isLoading ? "EVALUATING" : (result?.overallVerdict.rawValue ?? "STANDBY"))
+                        .font(.caption.weight(.bold).monospaced())
+                        .foregroundStyle(statusColor)
                 }
-
-                VStack(alignment: .leading, spacing: DesignTokens.spaceXS) {
-                    Text(isLoading ? "EVALUATING AIRSPACE & WEATHER..." : (result?.overallVerdict.title ?? "SYSTEM READY"))
-                        .font(.system(size: 11, weight: .black, design: .monospaced))
-                        .foregroundStyle(verdictColor)
-                        .kerning(1.2)
-
-                    Text(isLoading ? "Syncing FAA ArcGIS & NOAA Data" : (result?.primaryHeadline ?? "Awaiting Telemetry"))
-                        .font(.system(size: 18, weight: .bold))
-                        .foregroundStyle(DesignTokens.textPrimary)
-                }
+                .padding(.horizontal, DesignTokens.space8)
+                .padding(.vertical, DesignTokens.space4)
+                .background(
+                    Capsule()
+                        .fill(statusBadgeMuted)
+                )
 
                 Spacer()
 
                 if let factors = result?.factors, !factors.isEmpty {
                     Button {
-                        withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
+                        withAnimation(.snappy(duration: 0.25)) {
                             isExpanded.toggle()
                         }
                     } label: {
-                        Image(systemName: isExpanded ? "chevron.up.circle.fill" : "chevron.down.circle.fill")
-                            .font(.system(size: 22))
-                            .foregroundStyle(DesignTokens.textSecondary)
-                            .frame(minWidth: 44, minHeight: 44)
+                        HStack(spacing: DesignTokens.space4) {
+                            Text(isExpanded ? "Hide Details" : "View Factors (\(factors.count))")
+                                .font(.footnote.weight(.medium))
+                            Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
+                                .font(.caption.weight(.semibold))
+                        }
+                        .foregroundStyle(DesignTokens.accent)
+                        .frame(minHeight: 44)
+                        .contentShape(Rectangle())
                     }
-                    .buttonStyle(.plain)
+                    .buttonStyle(.interactivePress)
                 }
             }
 
-            // Summary Rationale
+            // Headline
+            Text(isLoading ? "Analyzing Airspace & Atmospheric Soundings" : (result?.primaryHeadline ?? "Awaiting Telemetry"))
+                .font(.title3.weight(.bold))
+                .foregroundStyle(DesignTokens.textPrimary)
+
+            // Rationale Copy
             if let rationale = result?.detailedRationale {
                 Text(rationale)
-                    .font(.system(size: 14, weight: .regular))
+                    .font(.subheadline)
                     .foregroundStyle(DesignTokens.textSecondary)
-                    .lineSpacing(3)
+                    .lineSpacing(2)
             }
 
-            // Detailed Factors Accordion
+            // Expandable Regulatory RAM Factor Breakdown
             if isExpanded, let factors = result?.factors {
-                Divider()
-                    .overlay(DesignTokens.cardBorder)
+                VStack(alignment: .leading, spacing: DesignTokens.space8) {
+                    Divider()
+                        .background(DesignTokens.borderHairline)
+                        .padding(.vertical, DesignTokens.space4)
 
-                VStack(alignment: .leading, spacing: DesignTokens.spaceS) {
-                    Text("RAM COMPLIANCE BREAKDOWN")
-                        .font(.system(size: 10, weight: .bold, design: .monospaced))
-                        .foregroundStyle(DesignTokens.textMuted)
+                    Text("RISK ASSESSMENT MATRIX BREAKDOWN")
+                        .font(.caption2.weight(.semibold).monospaced())
+                        .foregroundStyle(DesignTokens.textTertiary)
 
                     ForEach(factors) { factor in
-                        HStack(alignment: .top, spacing: DesignTokens.spaceS) {
+                        HStack(alignment: .top, spacing: DesignTokens.space8) {
                             Circle()
-                                .fill(colorForFactor(factor.severity))
-                                .frame(width: 8, height: 8)
-                                .padding(.top, 5)
+                                .fill(colorForVerdict(factor.severity))
+                                .frame(width: 6, height: 6)
+                                .padding(.top, 6)
 
                             VStack(alignment: .leading, spacing: 2) {
                                 HStack {
                                     Text(factor.category.rawValue)
-                                        .font(.system(size: 12, weight: .semibold))
+                                        .font(.subheadline.weight(.semibold))
                                         .foregroundStyle(DesignTokens.textPrimary)
 
                                     Spacer()
 
                                     Text(factor.regulatoryReference)
-                                        .font(.system(size: 10, weight: .medium, design: .monospaced))
-                                        .foregroundStyle(DesignTokens.textMuted)
+                                        .font(.caption.weight(.medium).monospaced())
+                                        .foregroundStyle(DesignTokens.textTertiary)
                                 }
 
                                 Text(factor.summary)
-                                    .font(.system(size: 12, weight: .regular))
+                                    .font(.footnote)
                                     .foregroundStyle(DesignTokens.textSecondary)
                                     .fixedSize(horizontal: false, vertical: true)
                             }
@@ -126,22 +140,22 @@ public struct VerdictBannerView: View {
                 .transition(.opacity.combined(with: .move(edge: .top)))
             }
         }
-        .padding(DesignTokens.spaceM)
+        .padding(DesignTokens.space16)
         .background(
-            RoundedRectangle(cornerRadius: DesignTokens.radiusM)
-                .fill(DesignTokens.cardBackground)
+            RoundedRectangle(cornerRadius: DesignTokens.radiusCard, style: .continuous)
+                .fill(DesignTokens.surfaceSecondary)
                 .overlay(
-                    RoundedRectangle(cornerRadius: DesignTokens.radiusM)
-                        .stroke(verdictColor.opacity(0.35), lineWidth: 1.2)
+                    RoundedRectangle(cornerRadius: DesignTokens.radiusCard, style: .continuous)
+                        .stroke(DesignTokens.borderHairline, lineWidth: 1)
                 )
         )
     }
 
-    private func colorForFactor(_ severity: RiskVerdict) -> Color {
-        switch severity {
-        case .safe: return DesignTokens.verdictSafe
-        case .caution: return DesignTokens.verdictCaution
-        case .noGo: return DesignTokens.verdictNoGo
+    private func colorForVerdict(_ verdict: RiskVerdict) -> Color {
+        switch verdict {
+        case .safe: return DesignTokens.statusSafe
+        case .caution: return DesignTokens.statusCaution
+        case .noGo: return DesignTokens.statusAlert
         }
     }
 }

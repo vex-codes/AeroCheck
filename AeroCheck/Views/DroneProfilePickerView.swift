@@ -7,7 +7,10 @@
 
 import SwiftUI
 
-/// Drone profile selection and custom airframe management sheet.
+/// Drone profile selection and custom airframe modal conforming to Apple HIG:
+/// - Semantic typography (Headline, Subheadline, Caption)
+/// - Flat card surfaces with hairline borders
+/// - 44x44pt minimum touch targets with active press feedback
 public struct DroneProfilePickerView: View {
     @Environment(\.dismiss) private var dismiss
 
@@ -39,183 +42,190 @@ public struct DroneProfilePickerView: View {
     public var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(spacing: DesignTokens.spaceM) {
+                VStack(spacing: DesignTokens.space16) {
                     // Profile List
-                    VStack(spacing: DesignTokens.spaceS) {
+                    VStack(spacing: DesignTokens.space8) {
                         ForEach(profiles) { profile in
                             Button {
                                 onSelect(profile)
                                 dismiss()
                             } label: {
-                                HStack(spacing: DesignTokens.spaceM) {
+                                HStack(spacing: DesignTokens.space12) {
                                     ZStack {
                                         Circle()
-                                            .fill(profile.id == selectedProfile.id ? DesignTokens.aeroBlue.opacity(0.2) : DesignTokens.cardBackgroundSecondary)
-                                            .frame(width: 42, height: 42)
+                                            .fill(profile.id == selectedProfile.id ? DesignTokens.accentMuted : DesignTokens.surfaceTertiary)
+                                            .frame(width: 36, height: 36)
 
                                         Image(systemName: "airplane")
-                                            .font(.system(size: 18, weight: .semibold))
-                                            .foregroundStyle(profile.id == selectedProfile.id ? DesignTokens.aeroBlue : DesignTokens.textSecondary)
+                                            .font(.footnote.weight(.semibold))
+                                            .foregroundStyle(profile.id == selectedProfile.id ? DesignTokens.accent : DesignTokens.textSecondary)
                                     }
 
-                                    VStack(alignment: .leading, spacing: 3) {
+                                    VStack(alignment: .leading, spacing: 2) {
                                         HStack {
                                             Text(profile.name)
-                                                .font(.system(size: 15, weight: .bold))
+                                                .font(.subheadline.weight(.semibold))
                                                 .foregroundStyle(DesignTokens.textPrimary)
 
                                             Spacer()
 
                                             if profile.id == selectedProfile.id {
                                                 Image(systemName: "checkmark.circle.fill")
-                                                    .foregroundStyle(DesignTokens.verdictSafe)
+                                                    .font(.subheadline)
+                                                    .foregroundStyle(DesignTokens.statusSafe)
                                             }
                                         }
 
-                                        HStack(spacing: DesignTokens.spaceS) {
+                                        HStack(spacing: DesignTokens.space8) {
                                             Text("\(Int(profile.weightGrams))g")
-                                                .font(.system(size: 11, weight: .medium, design: .monospaced))
-                                                .foregroundStyle(DesignTokens.textMuted)
+                                                .font(.caption.monospaced())
+                                                .foregroundStyle(DesignTokens.textTertiary)
 
                                             Text("•")
-                                                .foregroundStyle(DesignTokens.textMuted)
+                                                .foregroundStyle(DesignTokens.textTertiary)
 
                                             Text("Max Wind: \(Int(profile.maxWindResistanceMph)) mph")
-                                                .font(.system(size: 11, weight: .medium))
+                                                .font(.caption)
                                                 .foregroundStyle(DesignTokens.textSecondary)
 
                                             Text("•")
-                                                .foregroundStyle(DesignTokens.textMuted)
+                                                .foregroundStyle(DesignTokens.textTertiary)
 
                                             Text(profile.category)
-                                                .font(.system(size: 11, weight: .regular))
-                                                .foregroundStyle(DesignTokens.textMuted)
+                                                .font(.caption)
+                                                .foregroundStyle(DesignTokens.textTertiary)
                                         }
                                     }
                                 }
-                                .padding(DesignTokens.spaceM)
+                                .padding(DesignTokens.space16)
+                                .frame(minHeight: 52)
                                 .background(
-                                    RoundedRectangle(cornerRadius: DesignTokens.radiusM)
-                                        .fill(DesignTokens.cardBackground)
+                                    RoundedRectangle(cornerRadius: DesignTokens.radiusCard, style: .continuous)
+                                        .fill(DesignTokens.surfaceSecondary)
                                         .overlay(
-                                            RoundedRectangle(cornerRadius: DesignTokens.radiusM)
-                                                .stroke(profile.id == selectedProfile.id ? DesignTokens.aeroBlue : DesignTokens.cardBorder, lineWidth: 1.2)
+                                            RoundedRectangle(cornerRadius: DesignTokens.radiusCard, style: .continuous)
+                                                .stroke(profile.id == selectedProfile.id ? DesignTokens.accent : DesignTokens.borderHairline, lineWidth: 1)
                                         )
                                 )
+                                .contentShape(Rectangle())
                             }
-                            .buttonStyle(.plain)
+                            .buttonStyle(.interactivePress)
                         }
                     }
 
                     // Add Custom Button / Form
                     if !isAddingCustom {
                         Button {
-                            withAnimation {
+                            withAnimation(.snappy(duration: 0.25)) {
                                 isAddingCustom = true
                             }
                         } label: {
-                            HStack {
-                                Image(systemName: "plus.circle.fill")
-                                    .font(.system(size: 16))
+                            HStack(spacing: DesignTokens.space8) {
+                                Image(systemName: "plus.circle")
+                                    .font(.subheadline)
                                 Text("Add Custom Airframe Configuration")
-                                    .font(.system(size: 14, weight: .semibold))
+                                    .font(.subheadline.weight(.semibold))
                             }
-                            .foregroundStyle(DesignTokens.aeroBlue)
+                            .foregroundStyle(DesignTokens.accent)
                             .frame(maxWidth: .infinity)
                             .frame(minHeight: 48)
                             .background(
-                                RoundedRectangle(cornerRadius: DesignTokens.radiusM)
-                                    .fill(DesignTokens.cardBackground)
+                                RoundedRectangle(cornerRadius: DesignTokens.radiusCard, style: .continuous)
+                                    .fill(DesignTokens.surfaceSecondary)
                                     .overlay(
-                                        RoundedRectangle(cornerRadius: DesignTokens.radiusM)
-                                            .stroke(DesignTokens.aeroBlue.opacity(0.4), lineWidth: 1)
+                                        RoundedRectangle(cornerRadius: DesignTokens.radiusCard, style: .continuous)
+                                            .stroke(DesignTokens.borderHairline, lineWidth: 1)
                                     )
                             )
                         }
-                        .buttonStyle(.plain)
+                        .buttonStyle(.interactivePress)
                     } else {
-                        // Custom Drone Form
-                        VStack(alignment: .leading, spacing: DesignTokens.spaceM) {
+                        // Custom Airframe Form
+                        VStack(alignment: .leading, spacing: DesignTokens.space12) {
                             Text("CUSTOM AIRFRAME SPECIFICATIONS")
-                                .font(.system(size: 11, weight: .bold, design: .monospaced))
-                                .foregroundStyle(DesignTokens.textMuted)
+                                .font(.caption2.weight(.semibold).monospaced())
+                                .foregroundStyle(DesignTokens.textTertiary)
 
                             TextField("Airframe Name (e.g. Freefly Astro)", text: $customName)
+                                .font(.body)
                                 .textFieldStyle(.plain)
-                                .padding(DesignTokens.spaceS)
-                                .background(DesignTokens.cardBackgroundSecondary)
-                                .clipShape(RoundedRectangle(cornerRadius: DesignTokens.radiusS))
+                                .padding(DesignTokens.space12)
+                                .background(DesignTokens.surfaceTertiary)
+                                .clipShape(RoundedRectangle(cornerRadius: DesignTokens.radiusInner, style: .continuous))
                                 .foregroundStyle(DesignTokens.textPrimary)
 
-                            HStack(spacing: DesignTokens.spaceS) {
+                            HStack(spacing: DesignTokens.space8) {
                                 VStack(alignment: .leading, spacing: 2) {
                                     Text("Weight (g)")
-                                        .font(.system(size: 10, weight: .medium))
+                                        .font(.caption)
                                         .foregroundStyle(DesignTokens.textSecondary)
                                     TextField("Grams", text: $customWeight)
                                         .keyboardType(.numberPad)
+                                        .font(.body)
                                         .textFieldStyle(.plain)
-                                        .padding(DesignTokens.spaceS)
-                                        .background(DesignTokens.cardBackgroundSecondary)
-                                        .clipShape(RoundedRectangle(cornerRadius: DesignTokens.radiusS))
+                                        .padding(DesignTokens.space12)
+                                        .background(DesignTokens.surfaceTertiary)
+                                        .clipShape(RoundedRectangle(cornerRadius: DesignTokens.radiusInner, style: .continuous))
                                 }
 
                                 VStack(alignment: .leading, spacing: 2) {
                                     Text("Max Wind (mph)")
-                                        .font(.system(size: 10, weight: .medium))
+                                        .font(.caption)
                                         .foregroundStyle(DesignTokens.textSecondary)
                                     TextField("MPH", text: $customMaxWind)
                                         .keyboardType(.decimalPad)
+                                        .font(.body)
                                         .textFieldStyle(.plain)
-                                        .padding(DesignTokens.spaceS)
-                                        .background(DesignTokens.cardBackgroundSecondary)
-                                        .clipShape(RoundedRectangle(cornerRadius: DesignTokens.radiusS))
+                                        .padding(DesignTokens.space12)
+                                        .background(DesignTokens.surfaceTertiary)
+                                        .clipShape(RoundedRectangle(cornerRadius: DesignTokens.radiusInner, style: .continuous))
                                 }
                             }
 
-                            HStack(spacing: DesignTokens.spaceS) {
+                            HStack(spacing: DesignTokens.space8) {
                                 Button("Cancel") {
-                                    withAnimation { isAddingCustom = false }
+                                    withAnimation(.snappy(duration: 0.25)) { isAddingCustom = false }
                                 }
                                 .frame(maxWidth: .infinity)
                                 .frame(minHeight: 44)
                                 .foregroundStyle(DesignTokens.textSecondary)
+                                .font(.subheadline)
 
                                 Button("Save Airframe") {
                                     saveCustom()
                                 }
                                 .frame(maxWidth: .infinity)
                                 .frame(minHeight: 44)
-                                .background(DesignTokens.aeroBlue)
-                                .foregroundStyle(.black)
-                                .font(.system(size: 14, weight: .bold))
-                                .clipShape(RoundedRectangle(cornerRadius: DesignTokens.radiusS))
+                                .background(DesignTokens.accent)
+                                .foregroundStyle(.white)
+                                .font(.subheadline.weight(.semibold))
+                                .clipShape(RoundedRectangle(cornerRadius: DesignTokens.radiusInner, style: .continuous))
                                 .disabled(customName.trimmingCharacters(in: .whitespaces).isEmpty)
                             }
                         }
-                        .padding(DesignTokens.spaceM)
+                        .padding(DesignTokens.space16)
                         .background(
-                            RoundedRectangle(cornerRadius: DesignTokens.radiusM)
-                                .fill(DesignTokens.cardBackground)
+                            RoundedRectangle(cornerRadius: DesignTokens.radiusCard, style: .continuous)
+                                .fill(DesignTokens.surfaceSecondary)
                                 .overlay(
-                                    RoundedRectangle(cornerRadius: DesignTokens.radiusM)
-                                        .stroke(DesignTokens.cardBorder, lineWidth: 1)
+                                    RoundedRectangle(cornerRadius: DesignTokens.radiusCard, style: .continuous)
+                                        .stroke(DesignTokens.borderHairline, lineWidth: 1)
                                 )
                         )
                     }
                 }
-                .padding(DesignTokens.spaceM)
+                .padding(DesignTokens.space16)
             }
-            .background(DesignTokens.canvasBackground.ignoresSafeArea())
-            .navigationTitle("Select Airframe")
+            .background(DesignTokens.surfacePrimary.ignoresSafeArea())
+            .navigationTitle("Airframe Fleet")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("Done") {
                         dismiss()
                     }
-                    .font(.system(size: 15, weight: .semibold))
-                    .foregroundStyle(DesignTokens.aeroBlue)
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(DesignTokens.accent)
                 }
             }
         }
