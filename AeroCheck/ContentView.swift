@@ -73,9 +73,19 @@ struct ContentView: View {
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     HStack(spacing: DesignTokens.space8) {
-                        Image(systemName: "drone.fill")
-                            .font(.title3.weight(.bold))
-                            .foregroundStyle(DesignTokens.accent)
+                        ZStack {
+                            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                                .fill(DesignTokens.surfaceSecondary)
+                                .frame(width: 32, height: 32)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 8, style: .continuous)
+                                        .stroke(DesignTokens.borderHairline.opacity(0.8), lineWidth: 0.5)
+                                )
+
+                            Image(systemName: "drone.fill")
+                                .font(.system(size: 14, weight: .bold))
+                                .foregroundStyle(DesignTokens.accent)
+                        }
 
                         Text("AeroCheck")
                             .font(.headline.weight(.heavy))
@@ -92,31 +102,31 @@ struct ContentView: View {
                             await viewModel.refreshData()
                         }
                     } label: {
-                        HStack(spacing: 5) {
+                        ZStack {
+                            Circle()
+                                .fill(DesignTokens.surfaceSecondary)
+                                .frame(width: 34, height: 34)
+                                .overlay(
+                                    Circle()
+                                        .stroke(DesignTokens.borderHairline.opacity(0.8), lineWidth: 0.5)
+                                )
+
                             if viewModel.isLoading {
                                 ProgressView()
                                     .tint(DesignTokens.accent)
                                     .controlSize(.small)
                             } else {
-                                Image(systemName: "arrow.triangle.2.circlepath")
-                                    .font(.caption.weight(.bold))
+                                Image(systemName: "arrow.clockwise")
+                                    .font(.system(size: 14, weight: .bold))
                                     .foregroundStyle(DesignTokens.accent)
                             }
-
-                            Text(viewModel.isLoading ? "Syncing..." : "Sync")
-                                .font(.caption.weight(.bold))
-                                .foregroundStyle(DesignTokens.accent)
                         }
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 5)
-                        .background(
-                            Capsule()
-                                .fill(DesignTokens.surfaceSecondary)
-                                .overlay(Capsule().stroke(DesignTokens.borderHairline.opacity(0.8), lineWidth: 0.5))
-                        )
+                        .frame(width: 44, height: 44)
+                        .contentShape(Rectangle())
                     }
                     .buttonStyle(.interactivePress)
                     .disabled(viewModel.isLoading)
+                    .accessibilityLabel("Refresh and Resync Telemetry")
                 }
             }
             // Sheets
@@ -183,10 +193,11 @@ struct ContentView: View {
             Button {
                 viewModel.showCoordinateSheet = true
             } label: {
-                HStack(spacing: DesignTokens.space4) {
+                HStack(spacing: DesignTokens.space6) {
                     Image(systemName: "mappin.and.ellipse")
-                        .font(.caption)
+                        .font(.caption.weight(.semibold))
                         .foregroundStyle(DesignTokens.accent)
+                        .frame(width: 16, height: 16, alignment: .center)
 
                     Text(viewModel.locationManager.placemarkName)
                         .font(.subheadline.weight(.semibold))
@@ -242,6 +253,7 @@ struct ContentView: View {
                     Image(systemName: "drone.fill")
                         .font(.caption.weight(.bold))
                         .foregroundStyle(DesignTokens.accent)
+                        .frame(width: 16, height: 16, alignment: .center)
 
                     Text(viewModel.selectedDrone.name)
                         .font(.subheadline.weight(.semibold))
