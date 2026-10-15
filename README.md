@@ -99,7 +99,7 @@ AeroCheck does not use a cloud server, Supabase instance, Firebase project, or p
 
 1. Clone repository:
    ```bash
-   git clone https://github.com/your-username/AeroCheck.git
+   git clone https://github.com/vex-codes/AeroCheck.git
    cd AeroCheck
    ```
 
